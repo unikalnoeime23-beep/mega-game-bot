@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Game Hub</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; }
+        .game-btn { 
+            width: 200px; height: 200px; border-radius: 50%; 
+            background: linear-gradient(145deg, #ff0055, #ff5500);
+            border: none; color: white; font-size: 24px; font-weight: bold;
+            box-shadow: 0 10px 20px rgba(255,0,0,0.3); margin-top: 50px;
+        }
+        .score { font-size: 32px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>УБИВАЛКА ВРЕМЕНИ</h1>
+    <div class="score">Очки: <span id="scoreVal">0</span></div>
+    <button class="game-btn" onclick="addScore()">ЖМИ!</button>
+    <br><br>
+    <button onclick="sendResult()" style="background: green; color: white; padding: 10px;">ЗАВЕРШИТЬ И СОХРАНИТЬ</button>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        let score = 0;
+        function addScore() {
+            score++;
+            document.getElementById('scoreVal').innerText = score;
+        }
+
+        function sendResult() {
+            // Отправляем данные обратно в бота
+            let data = {
+                game: "clicker",
+                score: score
+            };
+            tg.sendData(JSON.stringify(data)); 
+        }
+    </script>
+</body>
+</html>
