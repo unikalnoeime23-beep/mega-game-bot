@@ -7,126 +7,73 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --main: #00d4ff;
-            --bg: #0b0e11;
-            --card: rgba(28, 33, 40, 0.6);
-            --gold: #ffd700;
-            --pink: #ff007f;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --main: #00d4ff; --bg: #0b0e11; --card: rgba(28, 33, 40, 0.7);
+            --gold: #ffd700; --pink: #ff007f; --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            background: var(--bg);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            margin: 0; padding: 0;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background: var(--bg); color: white; font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0; overflow: hidden; height: 100vh;
         }
 
-        /* Анимированный фон */
-        #bg-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            z-index: -1;
-            width: 100%; height: 100%;
-        }
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; }
 
+        /* Анимация появления экранов */
         .screen {
-            display: none;
-            width: 100%; height: 100%;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            box-sizing: border-box;
+            display: none; width: 100%; height: 100%;
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .active { display: flex !important; }
 
-        /* Заголовки */
         h1 {
-            font-size: 38px;
-            font-weight: 900;
-            margin: 0 0 10px 0;
+            font-size: clamp(30px, 8vw, 42px); font-weight: 900; margin: 0 0 10px 0;
             background: linear-gradient(90deg, var(--main), var(--pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.4));
         }
 
-        .balance-box {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--gold);
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-        }
+        .balance-box { font-size: 24px; font-weight: 700; color: var(--gold); margin-bottom: 25px; }
 
-        /* Карточки */
+        /* Карточки с анимацией задержки */
         .card {
-            background: var(--card);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 340px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            background: var(--card); backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 20px; margin-bottom: 12px; width: 100%; max-width: 340px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s;
         }
 
-        .card b { font-size: 18px; display: block; }
-        .card small { color: #8b949e; }
+        .card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
 
-        /* Кнопки */
         .btn {
             background: linear-gradient(135deg, var(--main), #0082ff);
-            color: #000;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 14px;
-            font-weight: 800;
-            text-transform: uppercase;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            color: #000; border: none; padding: 12px 20px;
+            border-radius: 14px; font-weight: 800; text-transform: uppercase;
+            font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
         }
 
-        .btn:active { transform: scale(0.95); }
-
-        .btn-shop { background: linear-gradient(135deg, var(--gold), #ffaa00); }
+        .btn-shop { background: linear-gradient(135deg, var(--gold), #ffaa00); width: 100%; max-width: 340px; padding: 18px; margin-top: 10px; }
 
         .btn-exit {
-            background: rgba(255, 68, 68, 0.2);
-            color: #ff4444;
-            border: 1px solid #ff4444;
-            width: 90%;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 16px;
-            font-weight: 700;
+            background: rgba(255, 68, 68, 0.1); color: #ff4444;
+            border: 1px solid rgba(255, 68, 68, 0.3); width: 90%;
+            padding: 15px; margin-top: 20px; border-radius: 16px; font-weight: 700;
         }
 
-        /* Игровое поле */
         #game-canvas {
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--main);
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+            background: rgba(0, 0, 0, 0.8); border: 2px solid var(--main);
+            border-radius: 20px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
         }
 
-        .score-ui {
-            font-size: 24px;
-            font-weight: 900;
-            color: var(--main);
-            margin-bottom: 15px;
-        }
+        .score-ui { font-size: 24px; font-weight: 900; color: var(--main); margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -137,30 +84,30 @@
         <h1>GAME HUB</h1>
         <div class="balance-box">💰 <span id="bal-val">0</span></div>
         
-        <div class="card">
-            <div><b>🐍 SNAKE</b><small>Classic Mode</small></div>
+        <div class="card" style="animation-delay: 0.1s;">
+            <div><b>🐍 SNAKE</b><small>Neon Arcade</small></div>
             <button class="btn" onclick="initSnake()">PLAY</button>
         </div>
 
-        <div class="card">
-            <div><b>🚀 JUMP</b><small>Doodle Style</small></div>
+        <div class="card" style="animation-delay: 0.2s;">
+            <div><b>🚀 JUMP</b><small>Gravity Test</small></div>
             <button class="btn" onclick="initJump()">PLAY</button>
         </div>
 
-        <button class="btn btn-shop" style="width: 100%; max-width: 340px; padding: 18px;" onclick="go('scr-shop')">SHOP & SKINS</button>
+        <button class="btn btn-shop" onclick="go('scr-shop')">MARKET & CUSTOM</button>
     </div>
 
     <div id="scr-shop" class="screen">
-        <h1 style="background: linear-gradient(90deg, var(--gold), #fff); -webkit-background-clip: text;">MARKET</h1>
+        <h1 style="color: var(--gold); background: none; -webkit-text-fill-color: var(--gold);">MARKET</h1>
         <div class="card">
-            <div><b>Cyan Ghost</b><small>Default</small></div>
+            <div><b>Cyan Classic</b><small>Default</small></div>
             <button class="btn" onclick="setSkin('#00d4ff')">USE</button>
         </div>
         <div class="card">
-            <div><b>Visual Noise</b><small>Price: 150 💰</small></div>
+            <div><b>Visual Noise</b><small>150 💰</small></div>
             <button class="btn" onclick="buySkin(150, 'rgb-mode')">BUY</button>
         </div>
-        <button class="btn-exit" onclick="go('scr-menu')">BACK TO HUB</button>
+        <button class="btn-exit" onclick="go('scr-menu')">BACK</button>
     </div>
 
     <div id="scr-game" class="screen">
@@ -171,8 +118,7 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+        tg.expand(); tg.ready();
 
         let bal = parseInt(localStorage.getItem('coins')) || 0;
         let skin = localStorage.getItem('activeSkin') || '#00d4ff';
@@ -181,55 +127,51 @@
         
         document.getElementById('bal-val').innerText = bal;
 
+        // --- ГЕНЕРАТОР ЗВУКА ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type, dur) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
+        }
+
+        const sfx = {
+            point: () => playSound(800, 'sine', 0.1),
+            jump: () => playSound(400, 'square', 0.1),
+            fail: () => { playSound(150, 'sawtooth', 0.4); playSound(100, 'sawtooth', 0.4); }
+        };
+
         // --- ФОНОВЫЕ ЧАСТИЦЫ ---
         const bgCvs = document.getElementById('bg-canvas');
         const bgCtx = bgCvs.getContext('2d');
         let particles = [];
-
-        function resize() {
-            bgCvs.width = window.innerWidth;
-            bgCvs.height = window.innerHeight;
-        }
+        function resize() { bgCvs.width = window.innerWidth; bgCvs.height = window.innerHeight; }
         window.onresize = resize; resize();
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * bgCvs.width;
-                this.y = Math.random() * bgCvs.height;
-                this.size = Math.random() * 2 + 1;
-                this.spX = Math.random() * 0.5 - 0.25;
-                this.spY = Math.random() * 0.5 - 0.25;
-            }
-            update() {
-                this.x += this.spX; this.y += this.spY;
-                if(this.x > bgCvs.width) this.x = 0;
-                if(this.y > bgCvs.height) this.y = 0;
-            }
-            draw() {
-                bgCtx.fillStyle = "rgba(0, 212, 255, 0.2)";
-                bgCtx.beginPath();
-                bgCtx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-                bgCtx.fill();
+        class P {
+            constructor() { this.x = Math.random()*bgCvs.width; this.y = Math.random()*bgCvs.height; this.s = Math.random()*2; this.vx = Math.random()*0.4-0.2; this.vy = Math.random()*0.4-0.2; }
+            draw() { 
+                this.x += this.vx; this.y += this.vy;
+                if(this.x<0||this.x>bgCvs.width) this.vx*=-1;
+                if(this.y<0||this.y>bgCvs.height) this.vy*=-1;
+                bgCtx.fillStyle = "rgba(0, 212, 255, 0.3)";
+                bgCtx.beginPath(); bgCtx.arc(this.x, this.y, this.s, 0, Math.PI*2); bgCtx.fill();
             }
         }
+        for(let i=0; i<40; i++) particles.push(new P());
+        function anim() { bgCtx.clearRect(0,0,bgCvs.width, bgCvs.height); particles.forEach(p=>p.draw()); requestAnimationFrame(anim); }
+        anim();
 
-        for(let i=0; i<50; i++) particles.push(new Particle());
-
-        function animBG() {
-            bgCtx.clearRect(0,0,bgCvs.width, bgCvs.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animBG);
-        }
-        animBG();
-
-        // --- ЛОГИКА ИНТЕРФЕЙСА ---
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        function setSkin(c) { skin = c; localStorage.setItem('activeSkin', c); alert("Skin Activated!"); }
-        
+        function setSkin(c) { skin = c; localStorage.setItem('activeSkin', c); }
         function buySkin(p, c) {
             if(owned.includes(c)) return setSkin(c);
             if(bal >= p) {
@@ -238,7 +180,7 @@
                 localStorage.setItem('owned', JSON.stringify(owned));
                 document.getElementById('bal-val').innerText = bal;
                 setSkin(c);
-            } else alert("Need more coins!");
+            }
         }
 
         const cvs = document.getElementById('game-canvas');
@@ -255,29 +197,20 @@
         }
 
         function drawSnake() {
-            ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.fillRect(0,0,300,400);
+            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0,0,300,400);
+            if(skin === 'rgb-mode') { hue=(hue+5)%360; ctx.fillStyle = `hsl(${hue},100%,50%)`; } else ctx.fillStyle = skin;
             
-            // RGB эффект для скина Visual Noise
-            if(skin === 'rgb-mode') {
-                hue = (hue + 5) % 360;
-                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-            } else ctx.fillStyle = skin;
-
-            snk.forEach((p, i) => {
-                ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle;
-                ctx.fillRect(p.x, p.y, 18, 18);
-            });
-            ctx.shadowBlur = 0;
-
-            ctx.fillStyle = "#ff0055"; ctx.fillRect(food.x, food.y, 18, 18);
+            snk.forEach(p => { ctx.shadowBlur=10; ctx.shadowColor=ctx.fillStyle; ctx.fillRect(p.x, p.y, 18, 18); });
+            ctx.shadowBlur=0; ctx.fillStyle="#ff0055"; ctx.fillRect(food.x, food.y, 18, 18);
             
-            let h = {x: snk[0].x + dx, y: snk[0].y + dy};
+            let h = {x: snk[0].x+dx, y: snk[0].y+dy};
             if(h.x==food.x && h.y==food.y) {
-                score+=10; food={x:Math.floor(Math.random()*14)*20, y:Math.floor(Math.random()*19)*20};
+                score+=10; sfx.point();
+                food={x:Math.floor(Math.random()*14)*20, y:Math.floor(Math.random()*19)*20};
                 tg.HapticFeedback.impactOccurred('medium');
             } else snk.pop();
 
-            if(h.x<0||h.x>=300||h.y<0||h.y>=400||snk.some(s=>s.x==h.x&&s.y==h.y)) return stopGame();
+            if(h.x<0||h.x>=300||h.y<0||h.y>=400||snk.some(s=>s.x==h.x&&s.y==h.y)) { sfx.fail(); return stopGame(); }
             snk.unshift(h);
             document.getElementById('score').innerText = score;
         }
@@ -286,37 +219,31 @@
         let ply, platforms;
         function initJump() {
             mode = "jump"; score = 0; ply = {x: 140, y: 300, v: 0}; platforms = [];
-            for(let i=0; i<6; i++) platforms.push({x: Math.random()*250, y: i*70});
+            for(let i=0; i<6; i++) platforms.push({x: Math.random()*240, y: i*70});
             go('scr-game');
             if(loop) clearInterval(loop);
             loop = setInterval(drawJump, 30);
         }
 
         function drawJump() {
-            ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.fillRect(0,0,300,400);
+            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0,0,300,400);
             ply.v += 0.8; ply.y += ply.v;
-
-            if(skin === 'rgb-mode') {
-                hue = (hue + 5) % 360; ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-            } else ctx.fillStyle = skin;
-
-            ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+            if(skin === 'rgb-mode') { hue=(hue+5)%360; ctx.fillStyle=`hsl(${hue},100%,50%)`; } else ctx.fillStyle=skin;
             ctx.fillRect(ply.x, ply.y, 20, 20);
-            ctx.shadowBlur = 0;
 
             ctx.fillStyle = "#00ff88";
             platforms.forEach(p => {
-                ctx.fillRect(p.x, p.y, 55, 8);
-                if(ply.v > 0 && ply.x+20 > p.x && ply.x < p.x+55 && ply.y+20 > p.y && ply.y+20 < p.y+12) {
-                    ply.v = -16; score += 5;
+                ctx.fillRect(p.x, p.y, 60, 8);
+                if(ply.v > 0 && ply.x+20 > p.x && ply.x < p.x+60 && ply.y+20 > p.y && ply.y+20 < p.y+12) {
+                    ply.v = -16; score += 5; sfx.jump();
                     tg.HapticFeedback.impactOccurred('light');
                 }
             });
 
-            if(ply.y > 400) return stopGame();
+            if(ply.y > 400) { sfx.fail(); return stopGame(); }
             if(ply.y < 150) {
                 let d = 150 - ply.y; ply.y = 150;
-                platforms.forEach(p => { p.y += d; if(p.y > 400) { p.y = 0; p.x = Math.random()*250; } });
+                platforms.forEach(p => { p.y += d; if(p.y > 400) { p.y = 0; p.x = Math.random()*240; } });
             }
             document.getElementById('score').innerText = score;
         }
@@ -332,8 +259,7 @@
         });
 
         function stopGame() {
-            clearInterval(loop);
-            bal += score;
+            clearInterval(loop); bal += score;
             localStorage.setItem('coins', bal);
             document.getElementById('bal-val').innerText = bal;
             tg.sendData(JSON.stringify({game: mode, score: score, total: bal}));
