@@ -2,45 +2,81 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Game Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; }
-        .game-btn { 
-            width: 200px; height: 200px; border-radius: 50%; 
-            background: linear-gradient(145deg, #ff0055, #ff5500);
-            border: none; color: white; font-size: 24px; font-weight: bold;
-            box-shadow: 0 10px 20px rgba(255,0,0,0.3); margin-top: 50px;
+        body { font-family: sans-serif; background: #121212; color: white; text-align: center; margin: 0; }
+        .header { padding: 20px; background: #1f1f1f; border-bottom: 2px solid #00d4ff; }
+        .game-card { 
+            background: #252525; margin: 15px; padding: 20px; border-radius: 15px;
+            border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;
         }
-        .score { font-size: 32px; margin-top: 20px; }
+        .play-btn { background: #00d4ff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; }
+        #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; }
+        .back-btn { position: absolute; top: 20px; left: 20px; color: #00d4ff; }
     </style>
 </head>
 <body>
-    <h1>УБИВАЛКА ВРЕМЕНИ</h1>
-    <div class="score">Очки: <span id="scoreVal">0</span></div>
-    <button class="game-btn" onclick="addScore()">ЖМИ!</button>
-    <br><br>
-    <button onclick="sendResult()" style="background: green; color: white; padding: 10px;">ЗАВЕРШИТЬ И СОХРАНИТЬ</button>
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
+<div id="main-menu">
+    <div class="header"><h1>GAME HUB 👾</h1></div>
+    
+    <div class="game-card">
+        <span>🐍 Змейка (Классика)</span>
+        <button class="play-btn" onclick="startGame('snake')">ИГРАТЬ</button>
+    </div>
 
-        let score = 0;
-        function addScore() {
-            score++;
-            document.getElementById('scoreVal').innerText = score;
-        }
+    <div class="game-card">
+        <span>🚀 Джамп (Убивалка)</span>
+        <button class="play-btn" onclick="startGame('jump')">ИГРАТЬ</button>
+    </div>
+</div>
 
-        function sendResult() {
-            // Отправляем данные обратно в бота
-            let data = {
-                game: "clicker",
-                score: score
-            };
-            tg.sendData(JSON.stringify(data)); 
-        }
-    </script>
+<div id="game-screen">
+    <div class="back-btn" onclick="closeGame()">⬅ Назад</div>
+    <h2 id="current-game-title" style="margin-top: 60px;"></h2>
+    <canvas id="gameCanvas" width="300" height="400" style="border: 2px solid #00d4ff;"></canvas>
+    <br>
+    <button class="play-btn" style="margin-top: 20px;" onclick="saveResult()">СОХРАНИТЬ И ВЫЙТИ</button>
+</div>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let currentScore = 0;
+    let currentGame = "";
+
+    function startGame(name) {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        document.getElementById('current-game-title').innerText = name.toUpperCase();
+        currentGame = name;
+        currentScore = 0;
+        
+        // Тут логика запуска движка игры (например, змейки)
+        alert("Игра " + name + " запущена! Кликай на холст, чтобы набирать очки.");
+    }
+
+    // Демо-функция набора очков
+    document.getElementById('gameCanvas').onclick = function() {
+        currentScore += 10;
+        tg.HapticFeedback.impactOccurred('light');
+        console.log("Score:", currentScore);
+    };
+
+    function saveResult() {
+        let data = {
+            game: currentGame,
+            score: currentScore
+        };
+        tg.sendData(JSON.stringify(data)); // Отправка в main.py
+    }
+
+    function closeGame() {
+        document.getElementById('main-menu').style.display = 'block';
+        document.getElementById('game-screen').style.display = 'none';
+    }
+</script>
 </body>
 </html>
