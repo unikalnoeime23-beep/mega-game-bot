@@ -2,269 +2,169 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GAME HUB</title>
     <style>
-        :root {
-            --main: #00d4ff; --bg: #0b0e11; --card: rgba(28, 33, 40, 0.7);
-            --gold: #ffd700; --pink: #ff007f; --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
         body {
-            background: var(--bg); color: white; font-family: 'Inter', sans-serif;
-            margin: 0; padding: 0; overflow: hidden; height: 100vh;
+            background-color: #0d1117;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
         }
 
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; }
-
-        /* Анимация появления экранов */
-        .screen {
-            display: none; width: 100%; height: 100%;
-            flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; box-sizing: border-box;
-            animation: fadeIn 0.4s ease-out;
+        .header {
+            margin-top: 50px;
+            margin-bottom: 30px;
+            text-align: center;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .header h1 {
+            font-size: 34px;
+            margin: 0;
+            background: linear-gradient(90deg, #00d2ff, #ff00cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            letter-spacing: 1px;
         }
 
-        .active { display: flex !important; }
-
-        h1 {
-            font-size: clamp(30px, 8vw, 42px); font-weight: 900; margin: 0 0 10px 0;
-            background: linear-gradient(90deg, var(--main), var(--pink));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.4));
+        .balance {
+            font-size: 26px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .balance-box { font-size: 24px; font-weight: 700; color: var(--gold); margin-bottom: 25px; }
-
-        /* Карточки с анимацией задержки */
-        .card {
-            background: var(--card); backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border); border-radius: 24px;
-            padding: 20px; margin-bottom: 12px; width: 100%; max-width: 340px;
-            display: flex; justify-content: space-between; align-items: center;
-            transition: 0.3s;
+        .game-list {
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
-
-        .btn {
-            background: linear-gradient(135deg, var(--main), #0082ff);
-            color: #000; border: none; padding: 12px 20px;
-            border-radius: 14px; font-weight: 800; text-transform: uppercase;
-            font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        .game-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 24px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .btn-shop { background: linear-gradient(135deg, var(--gold), #ffaa00); width: 100%; max-width: 340px; padding: 18px; margin-top: 10px; }
-
-        .btn-exit {
-            background: rgba(255, 68, 68, 0.1); color: #ff4444;
-            border: 1px solid rgba(255, 68, 68, 0.3); width: 90%;
-            padding: 15px; margin-top: 20px; border-radius: 16px; font-weight: 700;
+        .game-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        #game-canvas {
-            background: rgba(0, 0, 0, 0.8); border: 2px solid var(--main);
-            border-radius: 20px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+        .game-icon {
+            font-size: 22px;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
         }
 
-        .score-ui { font-size: 24px; font-weight: 900; color: var(--main); margin-bottom: 15px; }
+        .game-titles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-name {
+            font-weight: bold;
+            font-size: 19px;
+            letter-spacing: 0.5px;
+        }
+
+        .game-subtitle {
+            font-size: 13px;
+            color: #8b949e;
+        }
+
+        .play-button {
+            background: #00d2ff;
+            color: black;
+            border: none;
+            border-radius: 18px;
+            padding: 12px 30px;
+            font-weight: 900;
+            font-size: 14px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+            background: #00b8e6;
+        }
+
+        .market-button {
+            background: #ffaa00;
+            color: black;
+            border: none;
+            border-radius: 18px;
+            width: 100%;
+            padding: 20px;
+            font-weight: 900;
+            font-size: 16px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
-
-    <div id="scr-menu" class="screen active">
+    <div class="header">
         <h1>GAME HUB</h1>
-        <div class="balance-box">💰 <span id="bal-val">0</span></div>
-        
-        <div class="card" style="animation-delay: 0.1s;">
-            <div><b>🐍 SNAKE</b><small>Neon Arcade</small></div>
-            <button class="btn" onclick="initSnake()">PLAY</button>
-        </div>
-
-        <div class="card" style="animation-delay: 0.2s;">
-            <div><b>🚀 JUMP</b><small>Gravity Test</small></div>
-            <button class="btn" onclick="initJump()">PLAY</button>
-        </div>
-
-        <button class="btn btn-shop" onclick="go('scr-shop')">MARKET & CUSTOM</button>
+        <div class="balance">💰 95</div>
     </div>
 
-    <div id="scr-shop" class="screen">
-        <h1 style="color: var(--gold); background: none; -webkit-text-fill-color: var(--gold);">MARKET</h1>
-        <div class="card">
-            <div><b>Cyan Classic</b><small>Default</small></div>
-            <button class="btn" onclick="setSkin('#00d4ff')">USE</button>
+    <div class="game-list">
+        <div class="game-card">
+            <div class="game-info">
+                <span class="game-icon">🐍</span>
+                <div class="game-titles">
+                    <span class="game-name">SNAKE</span>
+                    <span class="game-subtitle">Neon Arcade</span>
+                </div>
+            </div>
+            <button class="play-button" onclick="location.href='index_game.html'">PLAY</button>
         </div>
-        <div class="card">
-            <div><b>Visual Noise</b><small>150 💰</small></div>
-            <button class="btn" onclick="buySkin(150, 'rgb-mode')">BUY</button>
+
+        <div class="game-card">
+            <div class="game-info">
+                <span class="game-icon">🚀</span>
+                <div class="game-titles">
+                    <span class="game-name">JUMP</span>
+                    <span class="game-subtitle">Gravity Test</span>
+                </div>
+            </div>
+            <button class="play-button" onclick="location.href='jumper.html'">PLAY</button>
         </div>
-        <button class="btn-exit" onclick="go('scr-menu')">BACK</button>
+
+        <div class="game-card">
+            <div class="game-info">
+                <span class="game-icon">🧱</span>
+                <div class="game-titles">
+                    <span class="game-name">TETRIS</span>
+                    <span class="game-subtitle">Classic Block</span>
+                </div>
+            </div>
+            <button class="play-button" onclick="location.href='tetris.html'">PLAY</button>
+        </div>
+
+        <button class="market-button" onclick="alert('Market coming soon!')">Market & Custom</button>
     </div>
 
-    <div id="scr-game" class="screen">
-        <div class="score-ui">SCORE: <span id="score">0</span></div>
-        <canvas id="game-canvas" width="300" height="400"></canvas>
-        <button class="btn-exit" onclick="stopGame()">SAVE & EXIT</button>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); tg.ready();
-
-        let bal = parseInt(localStorage.getItem('coins')) || 0;
-        let skin = localStorage.getItem('activeSkin') || '#00d4ff';
-        let owned = JSON.parse(localStorage.getItem('owned')) || ['#00d4ff'];
-        let score = 0, loop, mode = "", hue = 0;
-        
-        document.getElementById('bal-val').innerText = bal;
-
-        // --- ГЕНЕРАТОР ЗВУКА ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(freq, type, dur) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + dur);
-        }
-
-        const sfx = {
-            point: () => playSound(800, 'sine', 0.1),
-            jump: () => playSound(400, 'square', 0.1),
-            fail: () => { playSound(150, 'sawtooth', 0.4); playSound(100, 'sawtooth', 0.4); }
-        };
-
-        // --- ФОНОВЫЕ ЧАСТИЦЫ ---
-        const bgCvs = document.getElementById('bg-canvas');
-        const bgCtx = bgCvs.getContext('2d');
-        let particles = [];
-        function resize() { bgCvs.width = window.innerWidth; bgCvs.height = window.innerHeight; }
-        window.onresize = resize; resize();
-
-        class P {
-            constructor() { this.x = Math.random()*bgCvs.width; this.y = Math.random()*bgCvs.height; this.s = Math.random()*2; this.vx = Math.random()*0.4-0.2; this.vy = Math.random()*0.4-0.2; }
-            draw() { 
-                this.x += this.vx; this.y += this.vy;
-                if(this.x<0||this.x>bgCvs.width) this.vx*=-1;
-                if(this.y<0||this.y>bgCvs.height) this.vy*=-1;
-                bgCtx.fillStyle = "rgba(0, 212, 255, 0.3)";
-                bgCtx.beginPath(); bgCtx.arc(this.x, this.y, this.s, 0, Math.PI*2); bgCtx.fill();
-            }
-        }
-        for(let i=0; i<40; i++) particles.push(new P());
-        function anim() { bgCtx.clearRect(0,0,bgCvs.width, bgCvs.height); particles.forEach(p=>p.draw()); requestAnimationFrame(anim); }
-        anim();
-
-        function go(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        function setSkin(c) { skin = c; localStorage.setItem('activeSkin', c); }
-        function buySkin(p, c) {
-            if(owned.includes(c)) return setSkin(c);
-            if(bal >= p) {
-                bal -= p; owned.push(c);
-                localStorage.setItem('coins', bal);
-                localStorage.setItem('owned', JSON.stringify(owned));
-                document.getElementById('bal-val').innerText = bal;
-                setSkin(c);
-            }
-        }
-
-        const cvs = document.getElementById('game-canvas');
-        const ctx = cvs.getContext('2d');
-
-        // --- ЗМЕЙКА ---
-        let snk, food, dx, dy;
-        function initSnake() {
-            mode = "snake"; score = 0; dx = 20; dy = 0;
-            snk = [{x: 140, y: 200}]; food = {x: 60, y: 60};
-            go('scr-game');
-            if(loop) clearInterval(loop);
-            loop = setInterval(drawSnake, 130);
-        }
-
-        function drawSnake() {
-            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0,0,300,400);
-            if(skin === 'rgb-mode') { hue=(hue+5)%360; ctx.fillStyle = `hsl(${hue},100%,50%)`; } else ctx.fillStyle = skin;
-            
-            snk.forEach(p => { ctx.shadowBlur=10; ctx.shadowColor=ctx.fillStyle; ctx.fillRect(p.x, p.y, 18, 18); });
-            ctx.shadowBlur=0; ctx.fillStyle="#ff0055"; ctx.fillRect(food.x, food.y, 18, 18);
-            
-            let h = {x: snk[0].x+dx, y: snk[0].y+dy};
-            if(h.x==food.x && h.y==food.y) {
-                score+=10; sfx.point();
-                food={x:Math.floor(Math.random()*14)*20, y:Math.floor(Math.random()*19)*20};
-                tg.HapticFeedback.impactOccurred('medium');
-            } else snk.pop();
-
-            if(h.x<0||h.x>=300||h.y<0||h.y>=400||snk.some(s=>s.x==h.x&&s.y==h.y)) { sfx.fail(); return stopGame(); }
-            snk.unshift(h);
-            document.getElementById('score').innerText = score;
-        }
-
-        // --- ДЖАМП ---
-        let ply, platforms;
-        function initJump() {
-            mode = "jump"; score = 0; ply = {x: 140, y: 300, v: 0}; platforms = [];
-            for(let i=0; i<6; i++) platforms.push({x: Math.random()*240, y: i*70});
-            go('scr-game');
-            if(loop) clearInterval(loop);
-            loop = setInterval(drawJump, 30);
-        }
-
-        function drawJump() {
-            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0,0,300,400);
-            ply.v += 0.8; ply.y += ply.v;
-            if(skin === 'rgb-mode') { hue=(hue+5)%360; ctx.fillStyle=`hsl(${hue},100%,50%)`; } else ctx.fillStyle=skin;
-            ctx.fillRect(ply.x, ply.y, 20, 20);
-
-            ctx.fillStyle = "#00ff88";
-            platforms.forEach(p => {
-                ctx.fillRect(p.x, p.y, 60, 8);
-                if(ply.v > 0 && ply.x+20 > p.x && ply.x < p.x+60 && ply.y+20 > p.y && ply.y+20 < p.y+12) {
-                    ply.v = -16; score += 5; sfx.jump();
-                    tg.HapticFeedback.impactOccurred('light');
-                }
-            });
-
-            if(ply.y > 400) { sfx.fail(); return stopGame(); }
-            if(ply.y < 150) {
-                let d = 150 - ply.y; ply.y = 150;
-                platforms.forEach(p => { p.y += d; if(p.y > 400) { p.y = 0; p.x = Math.random()*240; } });
-            }
-            document.getElementById('score').innerText = score;
-        }
-
-        cvs.addEventListener('touchstart', e => {
-            const r = cvs.getBoundingClientRect();
-            const x = e.touches[0].clientX - r.left;
-            const y = e.touches[0].clientY - r.top;
-            if(mode === "snake") {
-                if(Math.abs(x-150) > Math.abs(y-200)) { dx = x>150?20:-20; dy=0; }
-                else { dy = y>200?20:-20; dx=0; }
-            } else { ply.x = x - 10; }
-        });
-
-        function stopGame() {
-            clearInterval(loop); bal += score;
-            localStorage.setItem('coins', bal);
-            document.getElementById('bal-val').innerText = bal;
-            tg.sendData(JSON.stringify({game: mode, score: score, total: bal}));
-            go('scr-menu');
-        }
-    </script>
 </body>
 </html>
