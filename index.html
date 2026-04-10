@@ -6,114 +6,110 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main: #00d4ff; --bg: #0f1216; --card: #1c2128; --gold: #ffd700; --red: #ff4444; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; text-align: center; overflow: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; text-align: center; overflow: hidden; height: 100vh; }
         
-        .screen { display: none; width: 100%; }
-        .active { display: block !important; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
+        .active { display: flex !important; }
 
-        .card {
-            background: var(--card); border: 1px solid #30363d;
-            border-radius: 16px; padding: 15px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
+        /* Меню */
+        .balance-info { font-size: 26px; color: var(--gold); margin: 20px 0; font-weight: bold; }
+        .card { 
+            background: var(--card); border: 1px solid #30363d; border-radius: 16px; 
+            padding: 15px; margin-bottom: 12px; width: 90%; 
+            display: flex; justify-content: space-between; align-items: center; 
         }
-        .balance-info { font-size: 24px; color: var(--gold); margin: 20px 0; font-weight: bold; }
-
+        
         .btn { background: var(--main); color: black; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-exit { background: var(--red); color: white; width: 100%; padding: 15px; margin-top: 20px; border-radius: 12px; border: none; font-weight: bold; }
+        .btn-shop { background: var(--gold); }
+        .btn-exit { background: var(--red); color: white; width: 90%; padding: 15px; margin-top: 15px; border-radius: 15px; border: none; font-weight: bold; }
 
+        /* Игровое поле */
         canvas { background: black; border: 2px solid var(--main); border-radius: 12px; display: block; margin: 0 auto; touch-action: none; }
-        .score-text { font-size: 22px; color: var(--main); margin-bottom: 10px; font-weight: bold; }
+        .score-box { font-size: 22px; color: var(--main); margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="scr-menu" class="screen active">
         <h1 style="color: var(--main);">GAME HUB 👾</h1>
-        <div class="balance-info">💰 Монеты: <span id="balance">0</span></div>
+        <div class="balance-info">💰 <span id="bal-val">0</span></div>
         
         <div class="card">
             <div style="text-align: left;"><b>🐍 Змейка</b><br><small>Классика</small></div>
-            <button class="btn" onclick="startSnake()">ИГРАТЬ</button>
+            <button class="btn" onclick="initSnake()">ИГРАТЬ</button>
         </div>
 
         <div class="card">
-            <div style="text-align: left;"><b>🚀 Джамп</b><br><small>Прыгай выше всех</small></div>
-            <button class="btn" onclick="startJump()">ИГРАТЬ</button>
+            <div style="text-align: left;"><b>🚀 Джамп</b><br><small>Прыгай вверх!</small></div>
+            <button class="btn" onclick="initJump()">ИГРАТЬ</button>
         </div>
 
         <div class="card">
             <div style="text-align: left;"><b>🛒 Магазин</b><br><small>Скины</small></div>
-            <button class="btn" style="background: var(--gold);" onclick="show('scr-shop')">ЗАЙТИ</button>
+            <button class="btn btn-shop" onclick="go('scr-shop')">ВХОД</button>
         </div>
     </div>
 
     <div id="scr-shop" class="screen">
-        <h1>МАГАЗИН 🛒</h1>
+        <h1 style="color: var(--gold);">МАГАЗИН</h1>
         <div class="card">
-            <div><b>Синий (Def)</b><br><small>0 💰</small></div>
-            <button class="btn" onclick="setSkin('#00d4ff')">ВЫБРАТЬ</button>
+            <div><b>Синий</b><br><small>Стандарт</small></div>
+            <button class="btn" onclick="setSkin('#00d4ff')">ВЗЯТЬ</button>
         </div>
         <div class="card">
-            <div><b>Золотой</b><br><small>100 💰</small></div>
-            <button class="btn" onclick="buySkin(100, '#ffd700')">КУПИТЬ</button>
+            <div><b>Золотой</b><br><small>150 💰</small></div>
+            <button class="btn" onclick="buySkin(150, '#ffd700')">КУПИТЬ</button>
         </div>
-        <button class="btn-exit" onclick="show('scr-menu')">НАЗАД</button>
+        <button class="btn-exit" onclick="go('scr-menu')">НАЗАД</button>
     </div>
 
     <div id="scr-game" class="screen">
-        <div class="score-text">Очки: <span id="score-val">0</span></div>
-        <canvas id="gameCanvas" width="300" height="400"></canvas>
-        <button class="btn-exit" onclick="stopCurrentGame()">СОХРАНИТЬ И ВЫЙТИ</button>
+        <div class="score-box">СЧЁТ: <span id="score">0</span></div>
+        <canvas id="canvas" width="300" height="400"></canvas>
+        <button class="btn-exit" onclick="stopGame()">ВЫЙТИ</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
 
-        let bal = parseInt(localStorage.getItem('ubal')) || 0;
-        let skin = localStorage.getItem('uskin') || '#00d4ff';
-        let owned = JSON.parse(localStorage.getItem('uowned')) || ['#00d4ff'];
-        let score = 0, interval, mode = "";
+        let bal = parseInt(localStorage.getItem('coins')) || 0;
+        let skin = localStorage.getItem('activeSkin') || '#00d4ff';
+        let owned = JSON.parse(localStorage.getItem('owned')) || ['#00d4ff'];
         
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        document.getElementById('balance').innerText = bal;
+        document.getElementById('bal-val').innerText = bal;
 
-        function show(id) {
+        const cvs = document.getElementById('canvas');
+        const ctx = cvs.getContext('2d');
+        let score = 0, loop, mode = "";
+
+        function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
         // --- МАГАЗИН ---
-        function setSkin(c) { skin = c; localStorage.setItem('uskin', c); alert("Скин применен!"); }
+        function setSkin(c) { skin = c; localStorage.setItem('activeSkin', c); alert("Цвет изменен!"); }
         function buySkin(p, c) {
             if(owned.includes(c)) return setSkin(c);
             if(bal >= p) {
                 bal -= p; owned.push(c);
-                localStorage.setItem('ubal', bal);
-                localStorage.setItem('uowned', JSON.stringify(owned));
-                document.getElementById('balance').innerText = bal;
+                localStorage.setItem('coins', bal);
+                localStorage.setItem('owned', JSON.stringify(owned));
+                document.getElementById('bal-val').innerText = bal;
                 setSkin(c);
             } else alert("Мало монет!");
         }
 
-        // --- ИГРОВАЯ ЛОГИКА ---
-        function stopCurrentGame() {
-            clearInterval(interval);
-            bal += score;
-            localStorage.setItem('ubal', bal);
-            document.getElementById('balance').innerText = bal;
-            tg.sendData(JSON.stringify({game: mode, score: score, total: bal}));
-            show('scr-menu');
-        }
-
-        // --- 1. ЗМЕЙКА ---
+        // --- ЗМЕЙКА ---
         let snk, food, dx, dy;
-        function startSnake() {
-            mode = "Snake"; score = 0; dx = 20; dy = 0;
-            snk = [{x: 160, y: 160}]; food = {x: 80, y: 80};
-            show('scr-game');
-            interval = setInterval(drawSnake, 150);
+        function initSnake() {
+            mode = "snake"; score = 0; dx = 20; dy = 0;
+            snk = [{x: 160, y: 200}]; food = {x: 80, y: 80};
+            go('scr-game');
+            if(loop) clearInterval(loop);
+            loop = setInterval(drawSnake, 150);
         }
 
         function drawSnake() {
@@ -124,24 +120,29 @@
             
             let h = {x: snk[0].x + dx, y: snk[0].y + dy};
             if(h.x==food.x && h.y==food.y) {
-                score+=10; food={x:Math.floor(Math.random()*14+1)*20, y:Math.floor(Math.random()*19+1)*20};
+                score+=10; food={x:Math.floor(Math.random()*14)*20, y:Math.floor(Math.random()*19)*20};
                 tg.HapticFeedback.impactOccurred('light');
             } else snk.pop();
 
-            if(h.x<0||h.x>=300||h.y<0||h.y>=400||snk.some(s=>s.x==h.x&&s.y==h.y)) return stopCurrentGame();
+            if(h.x<0||h.x>=300||h.y<0||h.y>=400||snk.some(s=>s.x==h.x&&s.y==h.y)) {
+                alert("Game Over! Очки: " + score);
+                stopGame();
+                return;
+            }
             snk.unshift(h);
-            document.getElementById('score-val').innerText = score;
+            document.getElementById('score').innerText = score;
         }
 
-        // --- 2. ДЖАМП ---
+        // --- ДЖАМП ---
         let ply, platforms;
-        function startJump() {
-            mode = "Jump"; score = 0;
-            ply = {x: 150, y: 350, v: 0};
+        function initJump() {
+            mode = "jump"; score = 0;
+            ply = {x: 140, y: 300, v: 0};
             platforms = [];
             for(let i=0; i<6; i++) platforms.push({x: Math.random()*250, y: i*70});
-            show('scr-game');
-            interval = setInterval(drawJump, 30);
+            go('scr-game');
+            if(loop) clearInterval(loop);
+            loop = setInterval(drawJump, 30);
         }
 
         function drawJump() {
@@ -153,32 +154,45 @@
             ctx.fillStyle = "#00ff00";
             platforms.forEach(p => {
                 ctx.fillRect(p.x, p.y, 50, 10);
-                if(ply.v > 0 && ply.x+20 > p.x && ply.x < p.x+50 && ply.y+20 > p.y && ply.y+20 < p.y+15) {
-                    ply.v = -15; score += 5; // Прыжок
+                if(ply.v > 0 && ply.x+20 > p.x && ply.x < p.x+50 && ply.y+20 > p.y && ply.y+20 < p.y+10) {
+                    ply.v = -16; score += 5;
                     tg.HapticFeedback.impactOccurred('medium');
                 }
             });
 
-            if(ply.y > 400) return stopCurrentGame(); // Упал
-            if(ply.y < 100) { // Скроллинг мира
-                ply.y = 100;
-                platforms.forEach(p => { p.y += 10; if(p.y > 400) { p.y = 0; p.x = Math.random()*250; } });
+            if(ply.y > 400) { alert("Упал! Очки: " + score); stopGame(); return; }
+            if(ply.y < 150) { // Скроллинг
+                let diff = 150 - ply.y;
+                ply.y = 150;
+                platforms.forEach(p => { 
+                    p.y += diff; 
+                    if(p.y > 400) { p.y = 0; p.x = Math.random()*250; } 
+                });
             }
-            document.getElementById('score-val').innerText = score;
+            document.getElementById('score').innerText = score;
         }
 
-        // Управление (Тапы)
-        canvas.addEventListener('touchstart', e => {
-            const r = canvas.getBoundingClientRect();
+        // УПРАВЛЕНИЕ ТАПАМИ
+        cvs.addEventListener('touchstart', e => {
+            const r = cvs.getBoundingClientRect();
             const x = e.touches[0].clientX - r.left;
             const y = e.touches[0].clientY - r.top;
-            if(mode === "Snake") {
+            if(mode === "snake") {
                 if(Math.abs(x-150) > Math.abs(y-200)) { dx = x>150?20:-20; dy=0; }
                 else { dy = y>200?20:-20; dx=0; }
-            } else { // Джамп: лево/право
+            } else { // Jump: движение за пальцем
                 ply.x = x - 10;
             }
         });
+
+        function stopGame() {
+            clearInterval(loop);
+            bal += score;
+            localStorage.setItem('coins', bal);
+            document.getElementById('bal-val').innerText = bal;
+            tg.sendData(JSON.stringify({game: mode, score: score, total: bal}));
+            go('scr-menu');
+        }
     </script>
 </body>
 </html>
