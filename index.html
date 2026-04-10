@@ -5,184 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main: #00d4ff; --bg: #0f1216; --card: #1c2128; --gold: #ffd700; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; overflow: hidden; }
+        :root { --cyan: #00d4ff; --pink: #ff0055; --bg: #0f1216; --card: #1c2128; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; text-align: center; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* Экраны */
-        .screen { display: none; width: 100%; }
-        .active { display: block !important; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
+        .active { display: flex !important; }
 
-        /* Дизайн карточек */
-        .card {
-            background: var(--card); border: 1px solid #30363d;
-            border-radius: 16px; padding: 15px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .balance-info { font-size: 22px; color: var(--gold); margin-bottom: 20px; font-weight: bold; }
+        .balance-card { font-size: 24px; color: #ffd700; margin: 20px 0; font-weight: bold; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 16px; padding: 20px; margin-bottom: 12px; width: 90%; display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn { background: var(--cyan); color: #000; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-red { background: var(--pink); color: white; margin-top: 15px; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; }
 
-        /* Кнопки */
-        .btn { background: var(--main); color: black; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .btn-shop { background: var(--gold); }
-        .btn-exit { background: #ff4444; color: white; width: 100%; padding: 15px; margin-top: 20px; border-radius: 12px; border: none; font-weight: bold; }
-
-        /* Игра */
-        canvas { background: black; border: 2px solid var(--main); border-radius: 12px; display: block; margin: 0 auto; touch-action: none; }
-        .score-text { font-size: 20px; color: var(--main); margin-bottom: 10px; }
+        canvas { background: #000; border: 3px solid var(--cyan); border-radius: 12px; box-shadow: 0 0 20px rgba(0,212,255,0.2); touch-action: none; }
+        .score-box { font-size: 20px; color: var(--cyan); margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="screen-menu" class="screen active">
-        <h1 style="color: var(--main); text-shadow: 0 0 10px var(--main);">GAME HUB 👾</h1>
-        <div class="balance-info">💰 Монеты: <span id="balance">0</span></div>
+    <div id="scr-menu" class="screen active">
+        <h1 style="color: var(--cyan); margin-top: 30px;">GAME HUB 👾</h1>
+        <div class="balance-card">💰 <span id="bal-val">0</span></div>
         
         <div class="card">
-            <div style="text-align: left;"><b>🐍 Змейка</b><br><small>Классическая аркада</small></div>
-            <button class="btn" onclick="startSnake()">ИГРАТЬ</button>
+            <div style="text-align: left;"><b>🐍 Змейка</b><br><small>Классический режим</small></div>
+            <button class="btn" onclick="initGame()">ИГРАТЬ</button>
         </div>
 
         <div class="card">
-            <div style="text-align: left;"><b>🛒 Магазин</b><br><small>Скины и бонусы</small></div>
-            <button class="btn btn-shop" onclick="show('screen-shop')">ЗАЙТИ</button>
+            <div style="text-align: left;"><b>🛒 Магазин</b><br><small>Скины и цвета</small></div>
+            <button class="btn" style="background: #ffd700;" onclick="go('scr-shop')">ВХОД</button>
         </div>
     </div>
 
-    <div id="screen-shop" class="screen">
-        <h1>МАГАЗИН 🛒</h1>
+    <div id="scr-shop" class="screen">
+        <h1 style="color: #ffd700;">МАГАЗИН</h1>
         <div class="card">
-            <div style="text-align: left;"><b>Голубой скин</b><br><small>Цена: 0 (Стандарт)</small></div>
+            <div><b>Синий скин</b><br><small>Бесплатно</small></div>
             <button class="btn" onclick="setSkin('#00d4ff')">ВЫБРАТЬ</button>
         </div>
         <div class="card">
-            <div style="text-align: left;"><b>Золотой скин</b><br><small>Цена: 100 💰</small></div>
-            <button class="btn" onclick="buySkin(100, '#ffd700')">КУПИТЬ</button>
+            <div><b>Розовый скин</b><br><small>Цена: 100 💰</small></div>
+            <button class="btn" onclick="buySkin(100, '#ff0055')">КУПИТЬ</button>
         </div>
         <div class="card">
-            <div style="text-align: left;"><b>Неоновый скин</b><br><small>Цена: 250 💰</small></div>
-            <button class="btn" onclick="buySkin(250, '#ff00ff')">КУПИТЬ</button>
+            <div><b>Золотой скин</b><br><small>Цена: 300 💰</small></div>
+            <button class="btn" onclick="buySkin(300, '#ffd700')">КУПИТЬ</button>
         </div>
-        <button class="btn-exit" onclick="show('screen-menu')">НАЗАД В МЕНЮ</button>
+        <button class="btn-red" onclick="go('scr-menu')">НАЗАД В МЕНЮ</button>
     </div>
 
-    <div id="screen-game" class="screen">
-        <div class="score-text">Очки: <span id="score-val">0</span></div>
-        <canvas id="snakeCanvas" width="300" height="300"></canvas>
-        <button class="btn-exit" onclick="stopGame()">СОХРАНИТЬ И ВЫЙТИ</button>
+    <div id="scr-game" class="screen">
+        <div class="score-box">ОЧКИ: <span id="score">0</span></div>
+        <canvas id="gameCanvas" width="300" height="300"></canvas>
+        <button class="btn-red" onclick="exitGame()">СОХРАНИТЬ И ВЫЙТИ</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
 
-        let balance = parseInt(localStorage.getItem('user_bal')) || 0;
-        let activeColor = localStorage.getItem('user_skin') || '#00d4ff';
-        let ownedSkins = JSON.parse(localStorage.getItem('owned_skins')) || ['#00d4ff'];
+        let bal = parseInt(localStorage.getItem('coins')) || 0;
+        let skin = localStorage.getItem('activeSkin') || '#00d4ff';
+        let owned = JSON.parse(localStorage.getItem('owned')) || ['#00d4ff'];
         
-        document.getElementById('balance').innerText = balance;
+        document.getElementById('bal-val').innerText = bal;
 
-        const canvas = document.getElementById('snakeCanvas');
-        const ctx = canvas.getContext('2d');
+        const cvs = document.getElementById('gameCanvas');
+        const ctx = cvs.getContext('2d');
         const box = 20;
-        let snake, food, dx, dy, score, interval;
+        let snake, food, dx, dy, score, loop;
 
-        function show(id) {
+        function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        function setSkin(color) {
-            activeColor = color;
-            localStorage.setItem('user_skin', color);
-            alert("Скин выбран!");
+        function setSkin(c) { skin = c; localStorage.setItem('activeSkin', c); alert("Цвет изменен!"); }
+
+        function buySkin(p, c) {
+            if(owned.includes(c)) return setSkin(c);
+            if(bal >= p) {
+                bal -= p; owned.push(c);
+                localStorage.setItem('coins', bal);
+                localStorage.setItem('owned', JSON.stringify(owned));
+                document.getElementById('bal-val').innerText = bal;
+                setSkin(c);
+            } else alert("Не хватает монет!");
         }
 
-        function buySkin(price, color) {
-            if (ownedSkins.includes(color)) {
-                setSkin(color);
-            } else if (balance >= price) {
-                balance -= price;
-                ownedSkins.push(color);
-                localStorage.setItem('owned_skins', JSON.stringify(ownedSkins));
-                saveData();
-                setSkin(color);
-            } else {
-                alert("Нужно больше золота!");
-            }
-        }
-
-        function startSnake() {
-            show('screen-game');
-            score = 0;
-            document.getElementById('score-val').innerText = score;
-            snake = [{x: 8 * box, y: 8 * box}];
-            food = {x: 4 * box, y: 4 * box};
+        function initGame() {
+            go('scr-game');
+            score = 0; document.getElementById('score').innerText = score;
+            snake = [{x: 160, y: 160}]; food = {x: 80, y: 80};
             dx = box; dy = 0;
-            clearInterval(interval);
-            interval = setInterval(draw, 140);
+            if(loop) clearInterval(loop);
+            loop = setInterval(draw, 140);
         }
 
         function draw() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black"; ctx.fillRect(0, 0, 300, 300);
+            ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box);
 
-            // Еда
-            ctx.fillStyle = "#ff4444";
-            ctx.fillRect(food.x, food.y, box, box);
-
-            // Змейка
             snake.forEach((p, i) => {
-                ctx.fillStyle = i === 0 ? activeColor : "white";
+                ctx.fillStyle = (i === 0) ? skin : "white";
                 ctx.fillRect(p.x, p.y, box, box);
             });
 
             let head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
-            if (head.x === food.x && head.y === food.y) {
-                score += 10;
-                document.getElementById('score-val').innerText = score;
-                food = {
-                    x: Math.floor(Math.random() * 14 + 1) * box,
-                    y: Math.floor(Math.random() * 14 + 1) * box
-                };
-                tg.HapticFeedback.impactOccurred('light');
-            } else {
-                snake.pop();
-            }
+            if(head.x === food.x && head.y === food.y) {
+                score += 10; document.getElementById('score').innerText = score;
+                food = {x: Math.floor(Math.random()*14+1)*box, y: Math.floor(Math.random()*14+1)*box};
+                tg.HapticFeedback.impactOccurred('medium');
+            } else snake.pop();
 
-            if (head.x < 0 || head.x >= 300 || head.y < 0 || head.y >= 300 || snake.some(s => s.x === head.x && s.y === head.y)) {
+            if(head.x < 0 || head.x >= 300 || head.y < 0 || head.y >= 300 || snake.some(s => s.x === head.x && s.y === head.y)) {
+                clearInterval(loop);
                 tg.HapticFeedback.notificationOccurred('error');
-                stopGame();
-                alert("Игра окончена! Очки: " + score);
+                alert("КОНЕЦ! Счёт: " + score);
+                exitGame();
                 return;
             }
             snake.unshift(head);
         }
 
-        // Управление тапами по зонам (Лево/Право/Верх/Низ)
-        canvas.addEventListener('touchstart', e => {
-            const r = canvas.getBoundingClientRect();
+        cvs.addEventListener('touchstart', e => {
+            const r = cvs.getBoundingClientRect();
             const x = e.touches[0].clientX - r.left;
             const y = e.touches[0].clientY - r.top;
-            if (Math.abs(x - 150) > Math.abs(y - 150)) {
-                if (x > 150 && dx === 0) { dx = box; dy = 0; }
-                else if (x < 150 && dx === 0) { dx = -box; dy = 0; }
+            if(Math.abs(x-150) > Math.abs(y-150)) {
+                if(x > 150 && dx === 0) { dx = box; dy = 0; }
+                else if(x < 150 && dx === 0) { dx = -box; dy = 0; }
             } else {
-                if (y > 150 && dy === 0) { dy = box; dx = 0; }
-                else if (y < 150 && dy === 0) { dy = -box; dx = 0; }
+                if(y > 150 && dy === 0) { dy = box; dx = 0; }
+                else if(y < 150 && dy === 0) { dy = -box; dx = 0; }
             }
         });
 
-        function saveData() {
-            localStorage.setItem('user_bal', balance);
-            document.getElementById('balance').innerText = balance;
-        }
-
-        function stopGame() {
-            clearInterval(interval);
-            balance += score;
-            saveData();
-            tg.sendData(JSON.stringify({game: "Snake", score: score, total: balance}));
-            show('screen-menu');
+        function exitGame() {
+            clearInterval(loop);
+            bal += score;
+            localStorage.setItem('coins', bal);
+            document.getElementById('bal-val').innerText = bal;
+            tg.sendData(JSON.stringify({game: "Snake", score: score, total: bal}));
+            go('scr-menu');
         }
     </script>
 </body>
