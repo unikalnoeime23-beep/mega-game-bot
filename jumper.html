@@ -1,1 +1,125 @@
-<h1>Jumper Game Coming Soon</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jumper WebApp</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: Arial, sans-serif; }
+        canvas { display: block; background: #fff; margin: 0 auto; }
+        #ui { position: absolute; top: 10px; left: 10px; font-size: 20px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div id="ui">Score: <span id="score">0</span></div>
+    <canvas id="game"></canvas>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+
+        canvas.width = window.innerWidth > 400 ? 400 : window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let platforms = [];
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            size: 20,
+            vy: 0,
+            jumpForce: -10,
+            gravity: 0.4
+        };
+
+        // Создание платформ
+        function createPlatforms() {
+            platforms = [];
+            for (let i = 0; i < 7; i++) {
+                platforms.push({
+                    x: Math.random() * (canvas.width - 60),
+                    y: i * (canvas.height / 7),
+                    w: 60,
+                    h: 15
+                });
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = '#FF4500';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawPlatforms() {
+            ctx.fillStyle = '#228B22';
+            platforms.forEach(p => {
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+            });
+        }
+
+        function update() {
+            player.vy += player.gravity;
+            player.y += player.vy;
+
+            // Движение влево-вправо по тапу/клику
+            window.onclick = (e) => {
+                if (e.clientX < window.innerWidth / 2) player.x -= 30;
+                else player.x += 30;
+            };
+
+            // Прыжок при столкновении с платформой
+            if (player.vy > 0) {
+                platforms.forEach(p => {
+                    if (player.x > p.x && player.x < p.x + p.w &&
+                        player.y + player.size > p.y && player.y + player.size < p.y + p.h) {
+                        player.vy = player.jumpForce;
+                        score++;
+                        scoreElement.innerText = score;
+                    }
+                });
+            }
+
+            // Прокрутка экрана вверх
+            if (player.y < canvas.height / 2) {
+                let diff = canvas.height / 2 - player.y;
+                player.y = canvas.height / 2;
+                platforms.forEach(p => {
+                    p.y += diff;
+                    if (p.y > canvas.height) {
+                        p.y = 0;
+                        p.x = Math.random() * (canvas.width - 60);
+                    }
+                });
+            }
+
+            // Смерть (падение вниз)
+            if (player.y > canvas.height) {
+                alert("GAME OVER! Score: " + score);
+                player.y = canvas.height - 50;
+                player.vy = 0;
+                score = 0;
+                scoreElement.innerText = score;
+                createPlatforms();
+            }
+
+            // Ограничения по бокам
+            if (player.x < 0) player.x = canvas.width;
+            if (player.x > canvas.width) player.x = 0;
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlatforms();
+            drawPlayer();
+            update();
+            requestAnimationFrame(loop);
+        }
+
+        createPlatforms();
+        loop();
+    </script>
+</body>
+</html>
