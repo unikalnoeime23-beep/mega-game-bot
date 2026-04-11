@@ -3,52 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Данила Хаб: ПРЕСТИЖ</title>
+    <title>Danila Hub: Prestige Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #8bac0f; --dark: #0f380f; }
         body { font-family: 'Press Start 2P', cursive; background: #1a1a1a; color: var(--dark); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; touch-action: none; }
-        .console { flex: 1; background: var(--bg); margin: 8px; border: 10px solid #333; border-radius: 15px; display: flex; flex-direction: column; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.4); }
         
+        .console { flex: 1; background: var(--bg); margin: 8px; border: 8px solid #333; border-radius: 15px; display: flex; flex-direction: column; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.4); }
         .header { padding: 8px; border-bottom: 3px solid var(--dark); background: rgba(0,0,0,0.05); }
-        .stats-row { display: flex; justify-content: space-between; font-size: 7px; margin-bottom: 5px; }
-        .rank-info { font-size: 8px; color: #304010; margin-top: 5px; }
+        .stats { display: flex; justify-content: space-between; font-size: 7px; margin-bottom: 5px; }
+        .rank { font-size: 8px; color: #304010; }
 
-        .nav { display: flex; background: #222; }
-        .nav button { flex: 1; padding: 12px; border: none; background: #333; color: #666; font-family: 'Press Start 2P'; font-size: 7px; }
+        .nav { display: flex; background: #222; z-index: 100; }
+        .nav button { flex: 1; padding: 15px; border: none; background: #333; color: #666; font-family: 'Press Start 2P'; font-size: 7px; cursor: pointer; }
         .nav button.active { background: var(--bg); color: var(--dark); }
         
-        .view { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; }
+        .view { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; overflow-y: auto; }
         .view.active { display: flex; }
         
         canvas { background: var(--bg); border: 3px solid var(--dark); image-rendering: pixelated; display: block; }
         .controls { display: grid; grid-template-columns: repeat(3, 60px); gap: 8px; margin-top: 10px; }
         .btn { background: var(--dark); color: var(--bg); border: none; width: 60px; height: 50px; font-size: 16px; border-radius: 5px; }
         
-        .card { border: 2px solid var(--dark); padding: 10px; margin: 5px; width: 85%; text-align: center; background: rgba(0,0,0,0.03); position: relative; }
-        .buy-btn { background: var(--dark); color: var(--bg); border: none; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; width: 100%; margin-top: 5px; cursor: pointer; }
+        .card { border: 2px solid var(--dark); padding: 10px; margin: 5px; width: 85%; text-align: center; background: rgba(0,0,0,0.03); }
+        .buy-btn { background: var(--dark); color: var(--bg); border: none; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; width: 100%; margin-top: 5px; }
         .buy-btn:disabled { opacity: 0.3; }
 
-        #tap-btn { width: 130px; height: 130px; background: var(--dark); border: 6px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; position: relative; border-radius: 50%; }
+        #tap-btn { width: 120px; height: 120px; background: var(--dark); border: 6px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 50%; }
         
         .pop { position: absolute; font-size: 8px; pointer-events: none; animation: popUp 0.6s forwards; color: var(--dark); font-weight: bold; }
         @keyframes popUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
 
-        /* Специальная кнопка престижа */
-        .prestige-btn { background: #e74c3c; color: white; border: 3px solid #c0392b; padding: 15px; font-family: 'Press Start 2P'; font-size: 8px; margin-top: 20px; animation: flash 1s infinite; cursor: pointer; }
-        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .prestige-btn { background: #e74c3c; color: white; border: 3px solid #c0392b; padding: 10px; font-family: 'Press Start 2P'; font-size: 6px; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="console">
     <div class="header">
-        <div class="stats-row">
+        <div class="stats">
             <span>DC:<span id="dc-val">0</span></span>
-            <span>МНОЖ:<span id="mult-val">1.0</span>x</span>
+            <span>X<span id="mult-val">1.0</span></span>
         </div>
-        <div class="rank-info">РАНГ: <span id="rank-ico">🆕</span> <span id="rank-name">НОВИЧОК</span></div>
+        <div class="rank"><span id="rank-ico">🆕</span> <span id="rank-name">НОВИЧОК</span></div>
     </div>
 
     <div class="nav">
@@ -58,15 +56,15 @@
     </div>
 
     <div id="v-menu" class="view active">
-        <div class="card"><span>ПИКСЕЛЬ ТАП</span><button class="buy-btn" onclick="startGame('clicker')">ВЫБРАТЬ</button></div>
+        <div class="card"><span>ТАП</span><button class="buy-btn" onclick="startGame('clicker')">ВЫБРАТЬ</button></div>
         <div class="card"><span>ЗМЕЙКА</span><button class="buy-btn" onclick="startGame('snake')">ВЫБРАТЬ</button></div>
         <div class="card"><span>ПРЫЖОК</span><button class="buy-btn" onclick="startGame('jumper')">ВЫБРАТЬ</button></div>
-        <div id="prestige-area"></div>
+        <div id="p-area"></div>
     </div>
 
     <div id="v-clicker" class="view">
-        <div id="tap-btn" onpointerdown="doTap(event)">ТАП!</div>
-        <div id="crit-msg" style="font-size: 7px; margin-top: 10px; color: #cc0000; height: 10px;"></div>
+        <div id="tap-btn" onpointerdown="doTap(event)">ЖМИ!</div>
+        <div id="crit-msg" style="font-size: 6px; margin-top: 8px; color: #cc0000; height: 10px;"></div>
     </div>
 
     <div id="v-snake" class="view">
@@ -87,7 +85,7 @@
         </div>
     </div>
 
-    <div id="v-shop" class="view" style="justify-content: flex-start; overflow-y: auto; padding-top: 10px;">
+    <div id="v-shop" class="view" style="justify-content: flex-start; padding-top: 10px;">
         <div id="shop-list" style="width: 100%;"></div>
     </div>
 </div>
@@ -96,200 +94,106 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // СОХРАНЕНИЕ ДАННЫХ
-    let coins = parseFloat(localStorage.getItem('danila_coins')) || 0;
-    let prestigeCount = parseInt(localStorage.getItem('danila_prestige')) || 0;
-    
-    // ПАРАМЕТРЫ УРОВНЕЙ (LV)
-    let levels = JSON.parse(localStorage.getItem('danila_lv')) || {
-        c_pwr: 0, c_auto: 0, c_crit: 0,
-        s_mult: 0, s_slow: 0,
-        j_jump: 0, j_grav: 0
-    };
+    let coins = parseFloat(localStorage.getItem('danila_dc')) || 0;
+    let prestige = parseInt(localStorage.getItem('danila_pr')) || 0;
+    let levels = JSON.parse(localStorage.getItem('danila_lv')) || { c_pwr:0, c_auto:0, c_crit:0, s_mult:0, s_slow:0, j_jump:0, j_grav:0 };
+    let curGame = 'clicker', gameLoop, jDir = 0;
 
     const ranks = [
-        {c: 0, n: "НОВИЧОК", i: "🆕"},
-        {c: 100, n: "БРОНЗА", i: "🥉"},
-        {c: 1000, n: "СЕРЕБРО", i: "🥈"},
-        {c: 10000, n: "ЗОЛОТО", i: "🥇"},
-        {c: 100000, n: "ПЛАТИНА", i: "💎"},
-        {c: 1000000, n: "МАСТЕР", i: "🔥"},
-        {c: 10000000, n: "ЭЛИТА", i: "👑"},
-        {c: 100000000, n: "ЛЕГЕНДА", i: "🌌"},
-        {c: 1000000000, n: "БОГ", i: "⚛️"}
+        {c:0, n:"НОВИЧОК", i:"🆕"}, {c:1000, n:"БРОНЗА", i:"🥉"}, {c:10000, n:"СЕРЕБРО", i:"🥈"},
+        {c:100000, n:"ЗОЛОТО", i:"🥇"}, {c:1000000, n:"МАСТЕР", i:"🔥"}, {c:1000000000, n:"БОГ", i:"⚛️"}
     ];
 
-    function getPrestigeMult() { return Math.pow(1.2, prestigeCount); }
+    const upgrades = {
+        clicker: [{id:'c_pwr', n:"СИЛА", b:100}, {id:'c_auto', n:"АВТО", b:500}, {id:'c_crit', n:"КРИТ", b:2000}],
+        snake: [{id:'s_mult', n:"X2 ЕДА", b:200}, {id:'s_slow', n:"МЕДЛЕННО", b:800}],
+        jumper: [{id:'j_jump', n:"ПРЫЖОК+", b:400}, {id:'j_grav', n:"ГРАВ-", b:1000}]
+    };
 
     function updateUI() {
-        let pMult = getPrestigeMult();
+        let m = Math.pow(1.2, prestige);
         document.getElementById('dc-val').innerText = Math.floor(coins).toLocaleString();
-        document.getElementById('mult-val').innerText = pMult.toFixed(1);
+        document.getElementById('mult-val').innerText = m.toFixed(1);
         
-        let rank = ranks[0];
-        for(let r of ranks) { if(coins >= r.c) rank = r; }
-        document.getElementById('rank-ico').innerText = rank.i;
-        document.getElementById('rank-name').innerText = rank.n;
+        let r = ranks[0];
+        for(let x of ranks) if(coins >= x.c) r = x;
+        document.getElementById('rank-ico').innerText = r.i;
+        document.getElementById('rank-name').innerText = r.n;
 
-        // Кнопка престижа
-        const pArea = document.getElementById('prestige-area');
-        if (coins >= 1000000000) {
-            if(!document.getElementById('p-btn')) {
-                pArea.innerHTML = `<button id="p-btn" class="prestige-btn" onclick="doPrestige()">ПРЕСТИЖ X${(pMult*1.2).toFixed(1)}</button>`;
-            }
-        } else { pArea.innerHTML = ''; }
+        if(coins >= 1000000000) {
+            document.getElementById('p-area').innerHTML = `<button class="prestige-btn" onclick="doPrestige()">ПРЕСТИЖ X${(m*1.2).toFixed(1)}</button>`;
+        } else document.getElementById('p-area').innerHTML = '';
 
-        localStorage.setItem('danila_coins', coins);
-        localStorage.setItem('danila_prestige', prestigeCount);
+        localStorage.setItem('danila_dc', coins);
+        localStorage.setItem('danila_pr', prestige);
         localStorage.setItem('danila_lv', JSON.stringify(levels));
     }
 
-    function doPrestige() {
-        if(confirm("Сбросить весь прогресс ради x1.2 к доходу?")) {
-            prestigeCount++;
-            coins = 0;
-            levels = { c_pwr: 0, c_auto: 0, c_crit: 0, s_mult: 0, s_slow: 0, j_jump: 0, j_grav: 0 };
-            updateUI();
-            showTab('menu');
-            alert("ПРЕСТИЖ АКТИВИРОВАН!");
-        }
-    }
-
-    // МАГАЗИН
-    function renderShop() {
-        const list = document.getElementById('shop-list'); list.innerHTML = '';
-        let mode = upgrades[curGame] ? curGame : 'clicker';
-        
-        upgrades[mode].forEach((it, i) => {
-            let lv = levels[it.id];
-            let price = Math.floor(it.baseC * Math.pow(1.8, lv));
-            let d = document.createElement('div'); d.className = 'card';
-            d.innerHTML = `<div style="font-size:7px">${it.n} <span style="color:#304010">LV:${lv}</span></div>
-                           <button class="buy-btn" id="b-${i}" onclick="buy('${mode}',${i})">${price} DC</button>`;
-            list.appendChild(d);
-            if(coins < price) document.getElementById('b-'+i).disabled = true;
-        });
-    }
-
-    function buy(m, i) {
-        let it = upgrades[m][i];
-        let price = Math.floor(it.baseC * Math.pow(1.8, levels[it.id]));
-        if(coins >= price) {
-            coins -= price;
-            levels[it.id]++;
-            updateUI(); renderShop();
-            beep(600, 0.1);
-        }
-    }
-
-    const upgrades = {
-        clicker: [
-            {id: 'c_pwr', n: "СИЛА ТАПА", baseC: 100},
-            {id: 'c_auto', n: "АВТО-КЛИК", baseC: 500},
-            {id: 'c_crit', n: "КРИТ. ШАНС", baseC: 2500}
-        ],
-        snake: [
-            {id: 's_mult', n: "МНОЖИТЕЛЬ", baseC: 200},
-            {id: 's_slow', n: "ЗАМЕДЛЕНИЕ", baseC: 800}
-        ],
-        jumper: [
-            {id: 'j_jump', n: "БОТИНКИ", baseC: 400},
-            {id: 'j_grav', n: "ГРАВИ-КОСТЮМ", baseC: 1000}
-        ]
-    };
-
-    // ГЕЙМПЛЕЙ КЛИКЕРА
-    function doTap(e) {
-        let pMult = getPrestigeMult();
-        let base = (1 + levels.c_pwr) * pMult;
-        
-        // Крит
-        let crit = 1;
-        if(Math.random() < (levels.c_crit * 0.05)) {
-            crit = 10;
-            document.getElementById('crit-msg').innerText = "КРИТИЧЕСКИЙ КЛИК!";
-            setTimeout(()=>document.getElementById('crit-msg').innerText="", 500);
-            beep(800, 0.1);
-        }
-
-        let gain = base * crit;
-        coins += gain;
-        updateUI();
-        pop(e.clientX, e.clientY, "+"+Math.floor(gain));
-        beep(400, 0.05);
-    }
-
-    // ВСПОМОГАТЕЛЬНОЕ
     function showTab(t) {
         clearInterval(gameLoop);
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
         document.getElementById('v-' + t).classList.add('active');
         document.getElementById('n-' + t)?.classList.add('active');
+        document.getElementById('title').innerText = t.toUpperCase();
         if(t === 'shop') renderShop();
         updateUI();
     }
 
-    let curGame = 'clicker';
-    function startGame(g) { curGame=g; showTab(g); setTimeout(() => { if(g==='snake') initSnake(); if(g==='jumper') initJumper(); }, 100); }
+    function startGame(g) { curGame = g; showTab(g); setTimeout(() => { if(g==='snake') initSnake(); if(g==='jumper') initJumper(); }, 100); }
 
-    function pop(x,y,v) {
-        let p = document.createElement('div'); p.className='pop'; p.style.left=x+'px'; p.style.top=y+'px'; p.innerText=v;
-        document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
+    function renderShop() {
+        const list = document.getElementById('shop-list'); list.innerHTML = '';
+        let m = upgrades[curGame] ? curGame : 'clicker';
+        upgrades[m].forEach((it, i) => {
+            let lv = levels[it.id], price = Math.floor(it.b * Math.pow(2, lv));
+            let d = document.createElement('div'); d.className = 'card';
+            d.innerHTML = `<div style="font-size:7px">${it.n} LV:${lv}</div><button class="buy-btn" id="b-${i}" onclick="buy('${m}',${i})">${price} DC</button>`;
+            list.appendChild(d);
+            if(coins < price) document.getElementById('b-'+i).disabled = true;
+        });
     }
 
-    function beep(f, d) {
-        try { let o = aCtx.createOscillator(); let g = aCtx.createGain(); o.type='square'; o.frequency.value=f; g.gain.value=0.02; o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime+d); } catch(e){}
+    function buy(m, i) {
+        let it = upgrades[m][i], price = Math.floor(it.b * Math.pow(2, levels[it.id]));
+        if(coins >= price) { coins -= price; levels[it.id]++; updateUI(); renderShop(); }
     }
-    const aCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // ЗМЕЙКА
+    function doPrestige() { if(confirm("СБРОСИТЬ ВСЁ ЗА МНОЖИТЕЛЬ?")) { prestige++; coins=0; levels={c_pwr:0,c_auto:0,c_crit:0,s_mult:0,s_slow:0,j_jump:0,j_grav:0}; showTab('menu'); } }
+
+    function doTap(e) {
+        let crit = Math.random() < (levels.c_crit * 0.05) ? 10 : 1;
+        if(crit > 1) { document.getElementById('crit-msg').innerText="CRIT!"; setTimeout(()=>document.getElementById('crit-msg').innerText="", 400); }
+        let gain = (1 + levels.c_pwr) * crit * Math.pow(1.2, prestige);
+        coins += gain; updateUI();
+        let p = document.createElement('div'); p.className='pop'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+Math.floor(gain); document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
+    }
+
+    // SNAKE
     const sC = document.getElementById('snakeCanvas'), sX = sC.getContext('2d');
     let sn, sf, sd;
-    function initSnake() { sn = [{x:8, y:8}]; sf = {x:4, y:4}; sd = 'right'; clearInterval(gameLoop); gameLoop = setInterval(drawSnake, 130 + (levels.s_slow * 10)); }
+    function initSnake() { sn=[{x:8,y:8}]; sf={x:4,y:4}; sd='right'; clearInterval(gameLoop); gameLoop=setInterval(drawSn, 130 + (levels.s_slow*10)); }
     function setDir(d) { if(d=='up'&&sd!='down') sd='up'; if(d=='down'&&sd!='up') sd='down'; if(d=='left'&&sd!='right') sd='left'; if(d=='right'&&sd!='left') sd='right'; }
-    function drawSnake() {
-        sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,180,180); sX.fillStyle = '#0f380f';
-        sn.forEach(p => sX.fillRect(p.x*10, p.y*10, 9, 9)); sX.strokeRect(sf.x*10, sf.y*10, 9, 9);
-        let h = {...sn[0]}; if(sd=='up') h.y--; if(sd=='down') h.y++; if(sd=='left') h.x--; if(sd=='right') h.x++;
-        if(h.x==sf.x && h.y==sf.y) {
-            coins += (10 + (levels.s_mult * 10)) * getPrestigeMult();
-            updateUI(); sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)};
-            beep(700, 0.05);
-        } else sn.pop();
-        if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) initSnake();
-        else sn.unshift(h);
+    function drawSn() {
+        sX.fillStyle='#8bac0f'; sX.fillRect(0,0,180,180); sX.fillStyle='#0f380f'; sn.forEach(p=>sX.fillRect(p.x*10,p.y*10,9,9)); sX.strokeRect(sf.x*10,sf.y*10,9,9);
+        let h={...sn[0]}; if(sd=='up') h.y--; if(sd=='down') h.y++; if(sd=='left') h.x--; if(sd=='right') h.x++;
+        if(h.x==sf.x && h.y==sf.y) { coins += (10+(levels.s_mult*10))*Math.pow(1.2,prestige); updateUI(); sf={x:Math.floor(Math.random()*18),y:Math.floor(Math.random()*18)}; } else sn.pop();
+        if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) initSnake(); else sn.unshift(h);
     }
 
-    // ДЖАМПЕР
+    // JUMPER
     const jC = document.getElementById('jumperCanvas'), jX = jC.getContext('2d');
-    let jp, jPlats, jDir=0;
-    function initJumper() { jp = {x:90, y:150, vy:0}; jPlats = []; for(let i=0; i<6; i++) jPlats.push({x:Math.random()*150, y:i*45, w:45, vx: Math.random()>0.8?1:0}); clearInterval(gameLoop); gameLoop = setInterval(drawJumper, 30); }
-    function drawJumper() {
-        jX.fillStyle = '#8bac0f'; jX.fillRect(0,0,200,250);
-        let grav = 0.35 - (levels.j_grav * 0.03);
-        let jump = -9 - (levels.j_jump * 0.5);
-        jp.vy += grav; jp.y += jp.vy; jp.x += jDir * 4;
-        jX.fillStyle = '#0f380f';
-        jPlats.forEach(p => {
-            p.x += p.vx; if(p.x<0||p.x>155) p.vx*=-1;
-            jX.fillRect(p.x, p.y, p.w, 7);
-            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) { jp.vy = jump; coins += 2 * getPrestigeMult(); updateUI(); beep(500, 0.03); }
-        });
-        if(jp.y < 80) { let d = 80 - jp.y; jp.y = 80; jPlats.forEach(p => { p.y += d; if(p.y > 250) { p.y = 0; p.x = Math.random()*150; }}); }
-        jX.fillRect(jp.x, jp.y, 15, 15);
-        if(jp.y > 260) initJumper();
-        if(jp.x < 0) jp.x = 200; if(jp.x > 200) jp.x = 0;
+    let jp, jPlats;
+    function initJumper() { jp={x:90,y:150,vy:0}; jPlats=[]; for(let i=0;i<6;i++) jPlats.push({x:Math.random()*150,y:i*45,w:45,vx:Math.random()>0.8?1:0}); clearInterval(gameLoop); gameLoop=setInterval(drawJp, 30); }
+    function drawJp() {
+        jX.fillStyle='#8bac0f'; jX.fillRect(0,0,200,250); jX.fillStyle='#0f380f';
+        jp.vy += (0.35 - levels.j_grav*0.03); jp.y += jp.vy; jp.x += jDir * 4;
+        jPlats.forEach(p => { p.x+=p.vx; if(p.x<0||p.x>155) p.vx*=-1; jX.fillRect(p.x,p.y,p.w,7); if(jp.vy>0 && jp.x+15>p.x && jp.x<p.x+p.w && jp.y+15>p.y && jp.y+15<p.y+10) { jp.vy = (-9-levels.j_jump*0.5); coins+=2*Math.pow(1.2,prestige); updateUI(); } });
+        if(jp.y<80) { let d=80-jp.y; jp.y=80; jPlats.forEach(p=>{ p.y+=d; if(p.y>250) {p.y=0; p.x=Math.random()*150;} }); }
+        jX.fillRect(jp.x,jp.y,15,15); if(jp.y>260) initJumper(); if(jp.x<0) jp.x=200; if(jp.x>200) jp.x=0;
     }
 
-    // АВТО-ДОХОД
-    setInterval(() => {
-        if(levels.c_auto > 0) {
-            coins += (levels.c_auto * 0.5) * getPrestigeMult();
-            updateUI();
-        }
-    }, 1000);
-
+    setInterval(() => { if(levels.c_auto>0) { coins+=(levels.c_auto*0.5)*Math.pow(1.2,prestige); updateUI(); } }, 1000);
     updateUI();
 </script>
 </body>
