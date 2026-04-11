@@ -1,120 +1,60 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Jumper Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #87CEEB; font-family: 'Arial', sans-serif; user-select: none; touch-action: none; }
-        canvas { display: block; background: #fff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.2); max-width: 100%; height: 100vh; }
-        #ui { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 28px; font-weight: 900; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); pointer-events: none; z-index: 10; }
+        body { margin: 0; overflow: hidden; background: #87CEEB; touch-action: none; }
+        canvas { display: block; background: #fff; }
     </style>
 </head>
 <body>
-    <div id="ui">SCORE: <span id="score">0</span></div>
-    <canvas id="game"></canvas>
-
+    <canvas id="c"></canvas>
     <script>
-        const canvas = document.getElementById('game');
+        const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        
+        let score = 0, platforms = [], gameActive = true;
+        const player = { x: canvas.width/2, y: canvas.height-100, w: 20, h: 20, vy: 0, g: 0.5, jump: -12 };
 
-        // Логическая ширина игры — 400px, высота подстраивается под экран
-        canvas.width = 400; 
-        canvas.height = window.innerHeight;
-
-        let score = 0;
-        let platforms = [];
-        let gameActive = true;
-
-        const player = {
-            // Изначальный размер кубика
-            baseSize: 20, 
-            width: 20,
-            height: 20,
-            // Позиция
-            x: canvas.width / 2,
-            y: canvas.height - 150,
-            // Физика
-            vy: 0,
-            gravity: 0.4,
-            jumpForce: -13,
-            // Управление
-            speed: 40 // Теперь это сдвиг при тапе
-        };
-
-        // --- СОЗДАНИЕ ПЛАТФОРМ ---
-        function createPlatforms() {
+        function init() {
             platforms = [];
-            const platformCount = 7;
-            const platformWidth = 60;
-            const platformHeight = 10;
-            platforms.push({ x: canvas.width / 2 - platformWidth / 2, y: canvas.height - 50, w: platformWidth, h: platformHeight });
-            for (let i = 1; i < platformCount; i++) platforms.push({ x: Math.random() * (canvas.width - platformWidth), y: i * (canvas.height / platformCount), w: platformWidth, h: platformHeight });
+            for (let i = 0; i < 8; i++) platforms.push({ x: Math.random()*(canvas.width-60), y: i*(canvas.height/8), w: 60, h: 10 });
         }
 
-        // --- ОРИСОВКА КВАДРАТИКА ---
-        function drawPlayer() {
-            ctx.fillStyle = 'red';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
+        // МГНОВЕННОЕ УПРАВЛЕНИЕ
+        window.addEventListener('touchstart', (e) => {
+            const tx = e.touches[0].clientX;
+            if (tx < canvas.width/2) player.x -= 45; else player.x += 45;
+        });
 
-        // --- ОРИСОВКА ПЛАТФОРМ ---
-        function drawPlatforms() {
-            ctx.fillStyle = 'green';
-            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
-        }
-
-        // --- ЛОГИКА И ФИЗИКА ---
-        function update() {
+        function draw() {
             if (!gameActive) return;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            player.vy += player.g; player.y += player.vy;
 
-            player.vy += player.gravity; player.y += player.vy;
-
-            // Прыжок при столкновении с платформой
             if (player.vy > 0) {
                 platforms.forEach(p => {
-                    if (player.x + player.width > p.x && player.x < p.x + p.w && player.y + player.height > p.y && player.y + player.height < p.y + p.h + player.vy) {
-                        player.vy = player.jumpForce; score++; scoreElement.innerText = score;
+                    if (player.x+player.w > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+p.h+player.vy) {
+                        player.vy = player.jump; score++;
                     }
                 });
             }
 
-            // Прокрутка экрана вверх
-            if (player.y < canvas.height / 2) {
-                let diff = canvas.height / 2 - player.y; player.y = canvas.height / 2;
-                platforms.forEach(p => { p.y += diff; if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * (canvas.width - p.w); } });
+            if (player.y < canvas.height/2) {
+                let d = canvas.height/2 - player.y; player.y = canvas.height/2;
+                platforms.forEach(p => { p.y += d; if (p.y > canvas.height) { p.y = 0; p.x = Math.random()*(canvas.width-60); } });
             }
 
-            // Смерть (падение вниз)
-            if (player.y > canvas.height) resetGame();
+            ctx.fillStyle = 'green'; platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+            ctx.fillStyle = 'red'; ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.fillStyle = '#000'; ctx.font = "20px Arial"; ctx.fillText("Score: "+score, 20, 40);
 
-            // Ограничения по бокам (телепортация)
-            if (player.x + player.width < 0) player.x = canvas.width;
-            if (player.x > canvas.width) player.x = -player.width;
+            if (player.y > canvas.height) { gameActive = false; setTimeout(() => { gameActive = true; player.y = canvas.height-100; player.vy = 0; score = 0; init(); }, 1000); }
+            requestAnimationFrame(draw);
         }
-
-        function resetGame() { player.y = canvas.height - 150; player.vy = 0; score = 0; scoreElement.innerText = score; createPlatforms(); }
-
-        function gameLoop() { ctx.clearRect(0,0,canvas.width,canvas.height); drawPlatforms(); drawPlayer(); update(); requestAnimationFrame(gameLoop); }
-
-        // --- УПРАВЛЕНИЕ ТАПАМИ (Новое, быстрое) ---
-        window.addEventListener('touchstart', (e) => {
-            if (!gameActive) return;
-            // Координата X первого касания
-            const touchX = e.touches[0].clientX;
-            // Логическая ширина игры — 400px. Вычисляем на основе реальной ширины окна.
-            const screenWidth = window.innerWidth;
-            const logicTouchX = (touchX / screenWidth) * canvas.width;
-
-            // Тап влево -> кубик резко влево, тап вправо -> кубик резко вправо
-            if (logicTouchX < canvas.width / 2) player.x -= player.speed;
-            else player.x += player.speed;
-        });
-
-        // --- СТАРТ ---
-        window.addEventListener('resize', () => { canvas.height = window.innerHeight; resetGame(); });
-        createPlatforms(); gameLoop();
+        init(); draw();
     </script>
 </body>
 </html>
