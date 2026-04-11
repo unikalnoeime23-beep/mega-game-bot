@@ -3,42 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Classic</title>
+    <title>Neon Snake</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            background-color: #0d1117;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            color: white;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-        canvas {
-            border: 2px solid #30363d;
-            background-color: #000;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-        }
-        .score { font-size: 32px; margin-bottom: 10px; color: #00ff00; font-weight: bold; }
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 80px);
-            grid-template-rows: repeat(2, 70px);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        button {
-            background: #161b22;
-            color: #00ff00;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            font-size: 24px;
-            touch-action: manipulation;
-        }
-        button:active { background: #30363d; }
+        body { background: #0d1117; color: #fff; font-family: Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #score { font-size: 30px; margin-bottom: 10px; color: #00ff00; font-weight: bold; }
+        canvas { border: 3px solid #30363d; background: #000; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); max-width: 90vw; max-height: 50vh; }
+        .controls { display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(2, 70px); gap: 15px; margin-top: 20px; }
+        button { background: #161b22; color: #00ff00; border: 2px solid #30363d; border-radius: 15px; font-size: 30px; touch-action: manipulation; box-shadow: 0 4px #000; cursor: pointer; }
+        button:active { transform: translateY(3px); box-shadow: 0 1px #000; background: #30363d; }
         .up { grid-column: 2; }
         .left { grid-column: 1; grid-row: 2; }
         .down { grid-column: 2; grid-row: 2; }
@@ -46,38 +19,43 @@
     </style>
 </head>
 <body>
-    <div class="score" id="score">0</div>
-    <canvas id="snake" width="320" height="320"></canvas>
-    
+    <div id="score">0</div>
+    <canvas id="snakeGame" width="320" height="320"></canvas>
+
     <div class="controls">
-        <button class="up" onclick="setDir('up')">↑</button>
-        <button class="left" onclick="setDir('left')">←</button>
-        <button class="down" onclick="setDir('down')">↓</button>
-        <button class="right" onclick="setDir('right')">→</button>
+        <button class="up" onclick="changeDir('up')">↑</button>
+        <button class="left" onclick="changeDir('left')">←</button>
+        <button class="down" onclick="changeDir('down')">↓</button>
+        <button class="right" onclick="changeDir('right')">→</button>
     </div>
 
     <script>
-        const canvas = document.getElementById("snake");
-        const ctx = canvas.getContext("2d");
+        const canvas = document.getElementById('snakeGame');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+
         const box = 16;
         let score = 0;
-        let snake = [{x: 9 * box, y: 10 * box}];
-        let food = { x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box };
-        let d;
+        let snake = [{ x: 9 * box, y: 10 * box }];
+        let food = {
+            x: Math.floor(Math.random() * 19) * box,
+            y: Math.floor(Math.random() * 19) * box
+        };
+        let d = "right";
 
-        function setDir(dir) {
-            if(dir == "left" && d != "right") d = "left";
-            else if(dir == "up" && d != "down") d = "up";
-            else if(dir == "right" && d != "left") d = "right";
-            else if(dir == "down" && d != "up") d = "down";
+        function changeDir(dir) {
+            if (dir == "up" && d != "down") d = "up";
+            if (dir == "left" && d != "right") d = "left";
+            if (dir == "down" && d != "up") d = "down";
+            if (dir == "right" && d != "left") d = "right";
         }
 
         function draw() {
             ctx.fillStyle = "black";
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            
-            for(let i=0; i<snake.length; i++) {
-                ctx.fillStyle = (i==0) ? "#00ff00" : "#008000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i == 0) ? "#00ff00" : "#008000";
                 ctx.fillRect(snake[i].x, snake[i].y, box, box);
             }
 
@@ -87,32 +65,44 @@
             let snakeX = snake[0].x;
             let snakeY = snake[0].y;
 
-            if( d == "left") snakeX -= box;
-            if( d == "up") snakeY -= box;
-            if( d == "right") snakeX += box;
-            if( d == "down") snakeY += box;
+            if (d == "left") snakeX -= box;
+            if (d == "up") snakeY -= box;
+            if (d == "right") snakeX += box;
+            if (d == "down") snakeY += box;
 
-            if(snakeX == food.x && snakeY == food.y) {
+            if (snakeX == food.x && snakeY == food.y) {
                 score++;
-                document.getElementById("score").innerHTML = score;
-                food = { x: Math.floor(Math.random()*20)*box, y: Math.floor(Math.random()*20)*box };
+                scoreEl.innerText = score;
+                food = {
+                    x: Math.floor(Math.random() * 19) * box,
+                    y: Math.floor(Math.random() * 19) * box
+                };
             } else {
                 snake.pop();
             }
 
             let newHead = { x: snakeX, y: snakeY };
 
-            if(snakeX < 0 || snakeY < 0 || snakeX >= canvas.width || snakeY >= canvas.height || collision(newHead, snake)) {
+            // СТОЛКНОВЕНИЕ (КОНЕЦ ИГРЫ)
+            if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
                 clearInterval(game);
-                alert("Конец игры! Твой счет: " + score);
-                location.reload();
+
+                // ОТПРАВКА ДАННЫХ В БОТА
+                if (window.Telegram && window.Telegram.WebApp && score > 0) {
+                    window.Telegram.WebApp.sendData(score.toString());
+                } else {
+                    // Если играем просто в браузере
+                    setTimeout(() => { location.reload(); }, 1000);
+                }
+                return;
             }
+
             snake.unshift(newHead);
         }
 
         function collision(head, array) {
-            for(let i=0; i<array.length; i++) {
-                if(head.x == array[i].x && head.y == array[i].y) return true;
+            for (let i = 0; i < array.length; i++) {
+                if (head.x == array[i].x && head.y == array[i].y) return true;
             }
             return false;
         }
