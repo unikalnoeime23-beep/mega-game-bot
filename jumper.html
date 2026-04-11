@@ -4,57 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; touch-action: none; }
-        canvas { display: block; background: #fff; }
+        body { margin: 0; overflow: hidden; background: #87CEEB; touch-action: none; font-family: Arial, sans-serif; }
+        canvas { display: block; background: #fff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.3); }
+        #score-ui { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 30px; font-weight: bold; color: white; text-shadow: 2px 2px 4px #000; pointer-events: none; }
     </style>
 </head>
 <body>
+    <div id="score-ui">SCORE: <span id="score">0</span></div>
     <canvas id="c"></canvas>
     <script>
         const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth > 400 ? 400 : window.innerWidth; 
+        canvas.height = window.innerHeight;
         
         let score = 0, platforms = [], gameActive = true;
-        const player = { x: canvas.width/2, y: canvas.height-100, w: 20, h: 20, vy: 0, g: 0.5, jump: -12 };
+        const player = { w: 20, h: 20, vy: 0, g: 0.5, jump: -12 };
 
         function init() {
             platforms = [];
-            for (let i = 0; i < 8; i++) platforms.push({ x: Math.random()*(canvas.width-60), y: i*(canvas.height/8), w: 60, h: 10 });
+            score = 0;
+            document.getElementById('score').innerText = score;
+            
+            // Центрируем игрока
+            player.x = canvas.width / 2 - player.w / 2;
+            player.y = canvas.height - 150;
+            player.vy = 0;
+
+            // ГАРАНТИРОВАННАЯ СТАРТОВАЯ ПЛАТФОРМА
+            platforms.push({ x: canvas.width / 2 - 30, y: canvas.height - 50, w: 60, h: 10 });
+
+            // Остальные платформы
+            for (let i = 1; i < 7; i++) {
+                platforms.push({ x: Math.random()*(canvas.width-60), y: canvas.height - i*(canvas.height/7) - 50, w: 60, h: 10 });
+            }
         }
 
         // МГНОВЕННОЕ УПРАВЛЕНИЕ
         window.addEventListener('touchstart', (e) => {
+            if (!gameActive) return;
             const tx = e.touches[0].clientX;
-            if (tx < canvas.width/2) player.x -= 45; else player.x += 45;
+            if (tx < window.innerWidth / 2) player.x -= 45; else player.x += 45;
         });
 
         function draw() {
             if (!gameActive) return;
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            player.vy += player.g; player.y += player.vy;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            player.vy += player.g; 
+            player.y += player.vy;
 
+            // Коллизия (прыжок)
             if (player.vy > 0) {
                 platforms.forEach(p => {
-                    if (player.x+player.w > p.x && player.x < p.x+p.w && player.y+player.h > p.y && player.y+player.h < p.y+p.h+player.vy) {
-                        player.vy = player.jump; score++;
+                    if (player.x + player.w > p.x && player.x < p.x + p.w && player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.vy) {
+                        player.vy = player.jump; 
+                        score++;
+                        document.getElementById('score').innerText = score;
                     }
                 });
             }
 
-            if (player.y < canvas.height/2) {
-                let d = canvas.height/2 - player.y; player.y = canvas.height/2;
-                platforms.forEach(p => { p.y += d; if (p.y > canvas.height) { p.y = 0; p.x = Math.random()*(canvas.width-60); } });
+            // Движение камеры вверх
+            if (player.y < canvas.height / 2) {
+                let d = canvas.height / 2 - player.y; 
+                player.y = canvas.height / 2;
+                platforms.forEach(p => { 
+                    p.y += d; 
+                    if (p.y > canvas.height) { 
+                        p.y = 0; 
+                        p.x = Math.random()*(canvas.width-60); 
+                    } 
+                });
             }
 
-            ctx.fillStyle = 'green'; platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
-            ctx.fillStyle = 'red'; ctx.fillRect(player.x, player.y, player.w, player.h);
-            ctx.fillStyle = '#000'; ctx.font = "20px Arial"; ctx.fillText("Score: "+score, 20, 40);
+            // Отрисовка
+            ctx.fillStyle = 'green'; 
+            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+            
+            ctx.fillStyle = 'red'; 
+            ctx.fillRect(player.x, player.y, player.w, player.h);
 
-            if (player.y > canvas.height) { gameActive = false; setTimeout(() => { gameActive = true; player.y = canvas.height-100; player.vy = 0; score = 0; init(); }, 1000); }
+            // Смерть и рестарт
+            if (player.y > canvas.height) { 
+                gameActive = false; 
+                setTimeout(() => { gameActive = true; init(); }, 800); 
+            }
+            
+            // Телепортация по краям экрана
+            if (player.x + player.w < 0) player.x = canvas.width;
+            if (player.x > canvas.width) player.x = -player.w;
+
             requestAnimationFrame(draw);
         }
-        init(); draw();
+        
+        init(); 
+        draw();
     </script>
 </body>
 </html>
