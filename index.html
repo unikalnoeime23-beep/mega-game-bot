@@ -3,101 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila Multi Hub</title>
+    <title>Danila Hub Retro Fixed</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #8bac0f; --dark: #0f380f; --mid: #306230; }
+        :root { --bg: #8bac0f; --dark: #0f380f; }
         body { 
             font-family: 'Press Start 2P', cursive; background: #222; 
             color: var(--dark); margin: 0; display: flex; flex-direction: column; 
-            height: 100vh; overflow: hidden; touch-action: manipulation;
+            height: 100vh; overflow: hidden; touch-action: none;
         }
 
-        /* Экран консоли */
         .screen {
-            flex: 1; background: var(--bg); margin: 10px; border: 10px solid #444;
-            border-radius: 10px; display: flex; flex-direction: column; position: relative;
+            flex: 1; background: var(--bg); margin: 5px; border: 8px solid #444;
+            display: flex; flex-direction: column; position: relative;
         }
 
-        .header { padding: 10px; border-bottom: 3px solid var(--dark); display: flex; justify-content: space-between; font-size: 10px; }
+        .header { padding: 8px; border-bottom: 3px solid var(--dark); display: flex; justify-content: space-between; font-size: 8px; }
 
         .nav { display: flex; background: #333; }
         .nav button { flex: 1; padding: 12px; border: none; background: #444; color: #888; font-family: 'Press Start 2P'; font-size: 8px; }
         .nav button.active { background: var(--bg); color: var(--dark); }
 
-        .view { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .view { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; }
         .view.active { display: flex; }
 
-        /* Игровые элементы */
-        .card { border: 3px solid var(--dark); padding: 15px; margin: 10px; width: 80%; text-align: center; }
-        .btn-big { background: var(--dark); color: var(--bg); border: none; padding: 10px; width: 100%; font-family: 'Press Start 2P'; font-size: 10px; margin-top: 10px; }
+        /* Игры */
+        canvas { background: var(--bg); border: 4px solid var(--dark); display: block; image-rendering: pixelated; }
+
+        /* Кнопки */
+        .controls { display: grid; grid-template-columns: repeat(3, 60px); gap: 10px; margin-top: 10px; }
+        .btn { background: var(--dark); color: var(--bg); border: none; width: 60px; height: 50px; font-size: 18px; border-radius: 5px; cursor: pointer; }
         
-        #tap-button { width: 120px; height: 120px; background: var(--dark); border: 5px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; }
+        .card { border: 3px solid var(--dark); padding: 10px; margin: 10px; width: 85%; text-align: center; }
+        .buy-btn { background: var(--dark); color: var(--bg); border: none; padding: 8px; font-family: 'Press Start 2P'; font-size: 8px; }
 
-        canvas { background: var(--bg); border: 3px solid var(--dark); display: block; }
-
-        /* Кнопки управления (только для мобил, на ПК будут стрелки) */
-        .controls { display: grid; grid-template-columns: repeat(3, 50px); gap: 10px; margin-top: 10px; }
-        .ctrl { background: var(--dark); color: var(--bg); border: none; width: 50px; height: 50px; font-size: 18px; border-radius: 5px; }
-
-        .shop-row { width: 90%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--dark); padding: 5px 0; font-size: 8px; }
+        #tap-btn { width: 140px; height: 140px; background: var(--dark); border: 6px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="screen">
     <div class="header">
-        <span>DC: <span id="coins-display">0</span></span>
-        <span id="mode-title">MENU</span>
+        <span>DC:<span id="dc-val">0</span></span>
+        <span id="title">MENU</span>
     </div>
 
     <div class="nav">
-        <button id="n-menu" class="active" onclick="switchTab('menu')">GAMES</button>
-        <button id="n-shop" onclick="switchTab('shop')">SHOP</button>
+        <button id="n-menu" class="active" onclick="showTab('menu')">GAMES</button>
+        <button id="n-shop" onclick="showTab('shop')">SHOP</button>
         <button onclick="tg.close()">OFF</button>
     </div>
 
     <div id="v-menu" class="view active">
         <div class="card">
-            <div style="font-size: 10px;">TAP MASTER</div>
-            <button class="btn-big" onclick="startApp('clicker')">SELECT</button>
+            <div style="font-size: 8px;">TAP MASTER</div>
+            <button class="buy-btn" style="width:100%; margin-top:10px;" onclick="startGame('clicker')">START</button>
         </div>
         <div class="card">
-            <div style="font-size: 10px;">SNAKE</div>
-            <button class="btn-big" onclick="startApp('snake')">SELECT</button>
+            <div style="font-size: 8px;">SNAKE</div>
+            <button class="buy-btn" style="width:100%; margin-top:10px;" onclick="startGame('snake')">START</button>
         </div>
         <div class="card">
-            <div style="font-size: 10px;">JUMPER</div>
-            <button class="btn-big" onclick="startApp('jumper')">SELECT</button>
+            <div style="font-size: 8px;">JUMPER</div>
+            <button class="buy-btn" style="width:100%; margin-top:10px;" onclick="startGame('jumper')">START</button>
         </div>
     </div>
 
     <div id="v-clicker" class="view">
-        <div id="tap-button" onpointerdown="clickMe(event)">TAP</div>
-        <p id="combo-tag" style="font-size: 8px; margin-top: 10px;">X1</p>
+        <div id="tap-btn" onpointerdown="doTap(event)">TAP!</div>
     </div>
 
     <div id="v-snake" class="view">
-        <canvas id="sCanvas" width="180" height="180"></canvas>
+        <canvas id="snakeCanvas" width="200" height="200"></canvas>
         <div class="controls">
-            <button class="ctrl" style="grid-column: 2" onclick="changeSnakeDir('up')">↑</button>
-            <button class="ctrl" style="grid-row: 2; grid-column: 1" onclick="changeSnakeDir('left')">←</button>
-            <button class="ctrl" style="grid-row: 2; grid-column: 2" onclick="changeSnakeDir('down')">↓</button>
-            <button class="ctrl" style="grid-row: 2; grid-column: 3" onclick="changeSnakeDir('right')">→</button>
+            <button class="btn" style="grid-column: 2" onpointerdown="setDir('up')">↑</button>
+            <button class="btn" style="grid-row: 2; grid-column: 1" onpointerdown="setDir('left')">←</button>
+            <button class="btn" style="grid-row: 2; grid-column: 2" onpointerdown="setDir('down')">↓</button>
+            <button class="btn" style="grid-row: 2; grid-column: 3" onpointerdown="setDir('right')">→</button>
         </div>
     </div>
 
     <div id="v-jumper" class="view">
-        <canvas id="jCanvas" width="200" height="260"></canvas>
+        <canvas id="jumperCanvas" width="200" height="280"></canvas>
         <div class="controls" style="grid-template-columns: 1fr 1fr; width: 180px;">
-            <button class="ctrl" style="width: 80px;" onmousedown="moveJ(-1)" onmouseup="moveJ(0)" ontouchstart="moveJ(-1)" ontouchend="moveJ(0)">LEFT</button>
-            <button class="ctrl" style="width: 80px;" onmousedown="moveJ(1)" onmouseup="moveJ(0)" ontouchstart="moveJ(1)" ontouchend="moveJ(0)">RIGHT</button>
+            <button class="btn" style="width: 80px;" onpointerdown="jInput=-1" onpointerup="jInput=0">L</button>
+            <button class="btn" style="width: 80px;" onpointerdown="jInput=1" onpointerup="jInput=0">R</button>
         </div>
     </div>
 
-    <div id="v-shop" class="view" style="justify-content: flex-start; padding-top: 10px; overflow-y: auto;">
-        <div id="shop-list" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+    <div id="v-shop" class="view" style="justify-content: flex-start; overflow-y: auto; padding-top: 10px;">
+        <div id="shop-list" style="width: 100%;"></div>
     </div>
 </div>
 
@@ -105,130 +101,137 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let coins = parseFloat(localStorage.getItem('dc')) || 0;
-    let clickP = 1, autoDC = 0, snM = 1, snS = 130, jJ = -11, jG = 0.5;
-    let cur = 'menu', gameInt;
+    let coins = parseFloat(localStorage.getItem('dc_save')) || 0;
+    let pwr = 1, auto = 0, snS = 120, snM = 1, jJ = -11, jG = 0.5;
+    let curView = 'menu', mainLoop, jInput = 0, isJumperActive = false;
 
-    const shopItems = {
-        clicker: [{n:"POWER+", c:50, f:()=>clickP++}, {n:"AUTO+", c:500, f:()=>autoDC+=2}],
-        snake: [{n:"APPLE X2", c:200, f:()=>snM++}],
-        jumper: [{n:"JUMP+", c:300, f:()=>jJ--}]
-    };
-
-    function switchTab(id) {
+    function showTab(tab) {
         stopAll();
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById('v-' + id).classList.add('active');
-        document.getElementById('n-' + id)?.classList.add('active');
-        cur = id;
-        document.getElementById('mode-title').innerText = id.toUpperCase();
-        if(id === 'shop') renderShop();
+        document.getElementById('v-' + tab).classList.add('active');
+        document.getElementById('n-' + tab)?.classList.add('active');
+        curView = tab;
+        document.getElementById('title').innerText = tab.toUpperCase();
+        if(tab === 'shop') renderShop();
+        updateUI();
     }
 
-    function startApp(game) {
-        switchTab(game);
-        if(game === 'snake') initSnake();
-        if(game === 'jumper') initJumper();
+    function stopAll() {
+        clearInterval(mainLoop);
+        isJumperActive = false;
     }
+
+    function startGame(game) {
+        showTab(game);
+        setTimeout(() => { // Задержка, чтобы canvas успел отрисоваться
+            if(game === 'snake') initSnake();
+            if(game === 'jumper') initJumper();
+        }, 50);
+    }
+
+    function updateUI() {
+        document.getElementById('dc-val').innerText = Math.floor(coins);
+        localStorage.setItem('dc_save', coins);
+    }
+
+    // --- МАГАЗИН ---
+    const upgrades = {
+        clicker: [{n:"TAP+", c:50, f:()=>pwr++}, {n:"AUTO+", c:500, f:()=>auto+=2}],
+        snake: [{n:"X2 APPLE", c:200, f:()=>snM++}],
+        jumper: [{n:"JUMP+", c:300, f:()=>jJ--}]
+    };
 
     function renderShop() {
-        const list = document.getElementById('shop-list');
-        list.innerHTML = '';
-        let m = (shopItems[cur]) ? cur : 'clicker';
-        shopItems[m].forEach((it, i) => {
-            const row = document.createElement('div');
-            row.className = 'shop-row';
-            row.innerHTML = `<span>${it.n} (C:${it.c})</span><button onclick="buy('${m}',${i})" style="background:var(--dark);color:var(--bg);font-size:8px;padding:5px;">BUY</button>`;
-            list.appendChild(row);
+        const cont = document.getElementById('shop-list');
+        cont.innerHTML = '';
+        let m = (upgrades[curView]) ? curView : 'clicker';
+        upgrades[m].forEach((it, i) => {
+            let d = document.createElement('div');
+            d.className = 'card'; d.style.width='90%'; d.style.display='flex'; d.style.justify='space-between';
+            d.innerHTML = `<span style="font-size:7px">${it.n} (${it.c})</span>
+                           <button class="buy-btn" onclick="buy('${m}',${i})">BUY</button>`;
+            cont.appendChild(d);
         });
     }
 
     function buy(m, i) {
-        let it = shopItems[m][i];
+        let it = upgrades[m][i];
         if(coins >= it.c) { coins -= it.c; it.f(); it.c = Math.floor(it.c*1.7); updateUI(); renderShop(); }
     }
 
-    function updateUI() {
-        document.getElementById('coins-display').innerText = Math.floor(coins);
-        localStorage.setItem('dc', coins);
-    }
-
     // --- КЛИКЕР ---
-    function clickMe(e) {
-        coins += clickP; updateUI();
-        let p = document.createElement('div'); p.style.position='absolute'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+clickP; p.style.fontSize='10px'; p.style.pointerEvents='none'; document.body.appendChild(p);
+    function doTap(e) {
+        coins += pwr; updateUI();
+        let p = document.createElement('div'); p.style.position='absolute'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+pwr; p.style.fontSize='10px'; p.style.pointerEvents='none'; document.body.appendChild(p);
         setTimeout(()=>p.remove(), 400);
     }
 
     // --- ЗМЕЙКА ---
-    const sC = document.getElementById('sCanvas'), sX = sC.getContext('2d');
+    const sC = document.getElementById('snakeCanvas'), sX = sC.getContext('2d');
     let sn, sf, sd;
     function initSnake() {
         sn = [{x:8, y:8}]; sf = {x:4, y:4}; sd = 'right';
-        clearInterval(gameInt); gameInt = setInterval(loopSnake, snS);
+        clearInterval(mainLoop);
+        mainLoop = setInterval(drawSnake, snS);
     }
-    function changeSnakeDir(dir) {
-        if(dir=='up'&&sd!='down') sd='up'; if(dir=='down'&&sd!='up') sd='down';
-        if(dir=='left'&&sd!='right') sd='left'; if(dir=='right'&&sd!='left') sd='right';
+    function setDir(d) {
+        if(d=='up'&&sd!='down') sd='up'; if(d=='down'&&sd!='up') sd='down';
+        if(d=='left'&&sd!='right') sd='left'; if(d=='right'&&sd!='left') sd='right';
     }
-    function loopSnake() {
-        sX.fillStyle = 'var(--bg)'; sX.fillRect(0,0,180,180);
-        sX.fillStyle = 'var(--dark)'; sn.forEach(b => sX.fillRect(b.x*10, b.y*10, 9, 9));
+    function drawSnake() {
+        sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,200,200);
+        sX.fillStyle = '#0f380f'; sn.forEach(p => sX.fillRect(p.x*10, p.y*10, 9, 9));
         sX.strokeRect(sf.x*10, sf.y*10, 9, 9);
         let h = {...sn[0]};
         if(sd=='up') h.y--; if(sd=='down') h.y++; if(sd=='left') h.x--; if(sd=='right') h.x++;
         if(h.x==sf.x && h.y==sf.y) {
-            coins += 10*snM; updateUI(); sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)};
+            coins += 10*snM; updateUI(); sf = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
         } else sn.pop();
-        if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) initSnake();
+        if(h.x<0||h.x>=20||h.y<0||h.y>=20||sn.some(s=>s.x==h.x&&s.y==h.y)) initSnake();
         else sn.unshift(h);
     }
 
     // --- ДЖАМПЕР ---
-    const jC = document.getElementById('jCanvas'), jX = jC.getContext('2d');
-    let jP, jL, jI = 0, jActive = false;
+    const jC = document.getElementById('jumperCanvas'), jX = jC.getContext('2d');
+    let jp, jPlats;
     function initJumper() {
-        jActive = true; jP = {x:90, y:150, vy:0}; jL = [];
-        for(let i=0; i<5; i++) jL.push({x:Math.random()*150, y:i*50, w:40});
-        requestAnimationFrame(loopJumper);
+        isJumperActive = true; jp = {x:90, y:150, vy:0}; jPlats = [];
+        for(let i=0; i<6; i++) jPlats.push({x:Math.random()*160, y:i*50, w:40});
+        requestAnimationFrame(drawJumper);
     }
-    function moveJ(v) { jI = v; }
-    function loopJumper() {
-        if(!jActive || cur !== 'jumper') return;
-        jX.fillStyle = 'var(--bg)'; jX.fillRect(0,0,200,260);
-        jP.vy += jG; jP.y += jP.vy; jP.x += jI * 4;
-        jX.fillStyle = 'var(--dark)';
-        jL.forEach(p => {
+    function drawJumper() {
+        if(!isJumperActive || curView !== 'jumper') return;
+        jX.fillStyle = '#8bac0f'; jX.fillRect(0,0,200,280);
+        jp.vy += jG; jp.y += jp.vy; jp.x += jInput * 4;
+        jX.fillStyle = '#0f380f';
+        jPlats.forEach(p => {
             jX.fillRect(p.x, p.y, p.w, 8);
-            if(jP.vy > 0 && jP.x+15 > p.x && jP.x < p.x+p.w && jP.y+15 > p.y && jP.y+15 < p.y+10) { jP.vy = jJ; coins += 2; updateUI(); }
+            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) { jp.vy = jJ; coins += 2; updateUI(); }
         });
-        if(jP.y < 80) { let d = 80 - jP.y; jP.y = 80; jL.forEach(p => { p.y += d; if(p.y > 260) { p.y = 0; p.x = Math.random()*150; }}); }
-        jX.fillRect(jP.x, jP.y, 15, 15);
-        if(jP.y > 280) initJumper();
-        if(jP.x < 0) jP.x = 200; if(jP.x > 200) jP.x = 0;
-        requestAnimationFrame(loopJumper);
+        if(jp.y < 100) {
+            let d = 100 - jp.y; jp.y = 100;
+            jPlats.forEach(p => { p.y += d; if(p.y > 280) { p.y = 0; p.x = Math.random()*160; }});
+        }
+        jX.fillRect(jp.x, jp.y, 15, 15);
+        if(jp.y > 300) initJumper();
+        if(jp.x < 0) jp.x = 200; if(jp.x > 200) jp.x = 0;
+        requestAnimationFrame(drawJumper);
     }
 
-    // УПРАВЛЕНИЕ КЛАВИАТУРОЙ (ДЛЯ ПК)
-    window.addEventListener('keydown', (e) => {
-        if(cur === 'snake') {
-            if(e.key === 'ArrowUp') changeSnakeDir('up');
-            if(e.key === 'ArrowDown') changeSnakeDir('down');
-            if(e.key === 'ArrowLeft') changeSnakeDir('left');
-            if(e.key === 'ArrowRight') changeSnakeDir('right');
+    // Клавиатура для ПК
+    window.onkeydown = (e) => {
+        if(curView === 'snake') {
+            if(e.key === 'ArrowUp') setDir('up'); if(e.key === 'ArrowDown') setDir('down');
+            if(e.key === 'ArrowLeft') setDir('left'); if(e.key === 'ArrowRight') setDir('right');
         }
-        if(cur === 'jumper') {
-            if(e.key === 'ArrowLeft') jI = -1;
-            if(e.key === 'ArrowRight') jI = 1;
+        if(curView === 'jumper') {
+            if(e.key === 'ArrowLeft') jInput = -1; if(e.key === 'ArrowRight') jInput = 1;
         }
-    });
-    window.addEventListener('keyup', (e) => {
-        if(cur === 'jumper') jI = 0;
-    });
+    };
+    window.onkeyup = (e) => { if(e.key.includes('Arrow')) jInput = 0; };
 
-    function stopAll() { clearInterval(gameInt); jActive = false; }
-    setInterval(() => { if(autoDC > 0) { coins += autoDC/10; updateUI(); }}, 100);
+    setInterval(() => { if(auto > 0) { coins += auto/10; updateUI(); }}, 100);
     updateUI();
 </script>
 </body>
