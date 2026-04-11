@@ -128,7 +128,7 @@
     let lvls = JSON.parse(localStorage.getItem('dc_lvls_v4')) || {};
     if(lvls.c_pwr === undefined) lvls.c_pwr = 0; if(lvls.c_auto === undefined) lvls.c_auto = 0;
     if(lvls.c_dbl === undefined) lvls.c_dbl = 0; if(lvls.c_kick === undefined) lvls.c_kick = 0;
-    if(lvls.s_mult === undefined) lvls.s_mult = 0; if(lvls.s_slow === undefined) lvls.s_slow = 0;
+    if(lvls.s_mult === undefined) lvls.s_mult = 0;
     if(lvls.s_shroom === undefined) lvls.s_shroom = 0; if(lvls.s_ghost === undefined) lvls.s_ghost = 0; if(lvls.s_ouro === undefined) lvls.s_ouro = 0;
     if(lvls.j_jmp === undefined) lvls.j_jmp = 0; if(lvls.j_grv === undefined) lvls.j_grv = 0;
 
@@ -136,7 +136,7 @@
     let pwr = 1 + lvls.c_pwr;
     let auto = lvls.c_auto * 5;
     let snM = 1 + lvls.s_mult;
-    let snS = Math.max(50, 130 - (lvls.s_slow * 10));
+    let snS = 130; // Стандартная скорость змейки (зафиксирована)
     let jJ = -9 - (lvls.j_jmp * 0.5);
     let jG = 0.35 - (lvls.j_grv * 0.02);
 
@@ -159,7 +159,6 @@
         ],
         snake: [
             {id:'s_mult', n:"ЯБЛОКИ X2", b:150, f:()=>snM++}, 
-            {id:'s_slow', n:"МЕДЛЕННО", b:500, f:()=>snS-=10},
             {id:'s_shroom', n:"ГРИБНОЙ ТРИП", b:5000, f:()=>{}},
             {id:'s_ghost', n:"ПРИЗРАК СТЕН", b:10000, f:()=>{}},
             {id:'s_ouro', n:"УРОБОРОС", b:20000, f:()=>{}}
