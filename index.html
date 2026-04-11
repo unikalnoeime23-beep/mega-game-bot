@@ -3,258 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila Hub</title>
+    <title>Danila Ultimate Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background-color: #0f0f0f; 
-            color: #fff; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh;
-            overflow: hidden;
-        }
+        :root { --accent: #f39c12; --bg: #0a0a0b; --card: #161618; --btn: #1f1f22; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
 
-        /* Навигация Хаба */
-        .hub-nav {
-            display: flex;
-            background: #1a1a1a;
-            padding: 10px;
-            border-bottom: 2px solid #333;
-            justify-content: space-around;
-            z-index: 1000;
-        }
-        .hub-nav button {
-            background: #333;
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .hub-nav button.active { background: #f39c12; }
+        /* Навигация */
+        .nav-bar { display: flex; background: #121214; border-bottom: 2px solid #222; z-index: 1000; }
+        .nav-btn { flex: 1; padding: 15px 0; background: none; border: none; color: #666; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s; }
+        .nav-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: rgba(243, 156, 18, 0.05); }
 
-        /* Экраны */
-        .screen { display: none; width: 100%; height: 100%; overflow-y: auto; position: relative; }
-        .screen.active { display: flex; flex-direction: column; align-items: center; }
+        /* Контент */
+        .page { display: none; width: 100%; height: 100%; overflow-y: auto; position: relative; }
+        .page.active { display: flex; flex-direction: column; align-items: center; }
 
-        /* Дизайн карточек в меню */
-        .menu-container { padding: 20px; width: 100%; box-sizing: border-box; }
-        .game-card { 
-            background: #1e1e1e; padding: 20px; border-radius: 15px; 
-            margin-bottom: 15px; border: 1px solid #333; text-align: left; 
-        }
-        .game-card h3 { margin: 0; color: #f39c12; }
-        .play-btn { 
-            display: block; width: 100%; background: #3498db; color: white; 
-            text-align: center; padding: 12px 0; border-radius: 10px; 
-            font-weight: bold; cursor: pointer; border: none; margin-top: 10px;
-        }
+        /* Шапка баланса */
+        .header { width: 100%; padding: 15px 0; background: #121214; text-align: center; border-bottom: 1px solid #222; }
+        .balance { font-size: 28px; font-weight: bold; color: var(--accent); text-shadow: 0 0 15px rgba(243,156,18,0.2); }
 
-        /* Стили для КЛИКЕРА (Твои) */
-        .balance-text { font-size: 36px; font-weight: bold; color: #f1c40f; margin-top: 20px; }
-        #click-button {
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 32px; font-weight: bold; border: 8px solid #962d22;
-            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4); margin-top: 40px;
-            touch-action: manipulation;
-        }
-        .shop-item { background: #1e1e1e; padding: 15px; border-radius: 12px; margin: 5px; border: 1px solid #333; width: 90%; display: flex; justify-content: space-between; align-items: center;}
-        
-        /* Стили для ЗМЕЙКИ */
-        canvas { border: 2px solid #333; background: #000; margin-top: 10px; }
-        .controls { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-top: 10px; }
-        .controls button { background: #222; color: #0f0; border: 1px solid #444; padding: 15px; border-radius: 10px; font-size: 20px; }
+        /* Меню выбора игр */
+        .game-menu { width: 90%; padding: 20px 0; }
+        .game-card { background: var(--card); border: 1px solid #222; border-radius: 16px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .game-card h3 { margin: 0; font-size: 18px; color: var(--accent); }
+        .game-card p { margin: 5px 0 0; font-size: 12px; color: #888; }
+        .play-btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        .pop-up { position: absolute; color: #f1c40f; font-size: 24px; font-weight: bold; pointer-events: none; animation: floatUp 1s forwards; }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+        /* Кликер */
+        #click-circle { width: 200px; height: 200px; background: radial-gradient(circle, #e74c3c, #c0392b); border-radius: 50%; margin-top: 50px; border: 8px solid #962d22; box-shadow: 0 0 40px rgba(231,76,60,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.05s; }
+        #click-circle:active { transform: scale(0.93); }
+
+        /* Магазин */
+        .shop-list { width: 90%; padding-bottom: 100px; }
+        .shop-item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .shop-item .info { flex: 1; }
+        .shop-item strong { display: block; font-size: 14px; }
+        .shop-item small { color: #666; font-size: 11px; }
+        .buy-btn { background: #27ae60; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; min-width: 80px; }
+        .buy-btn:disabled { background: #333; color: #666; }
+
+        /* Игровые холсты */
+        canvas { background: #000; border: 2px solid #222; border-radius: 10px; margin-top: 20px; }
+        .snake-ctrl { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-top: 20px; }
+        .ctrl-btn { background: var(--btn); border: 1px solid #333; color: #fff; font-size: 24px; padding: 15px; border-radius: 12px; }
+
+        .pop { position: absolute; color: var(--accent); font-weight: bold; pointer-events: none; animation: popUp 1s forwards; }
+        @keyframes popUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="hub-nav">
-        <button id="nav-menu" class="active" onclick="showScreen('menu')">🏠 МЕНЮ</button>
-        <button id="nav-clicker" onclick="showScreen('clicker')">🖱 КЛИКЕР</button>
-        <button id="nav-snake" onclick="showScreen('snake')">🐍 ЗМЕЙКА</button>
-        <button id="nav-jumper" onclick="showScreen('jumper')">🚀 ДЖАМПЕР</button>
-    </div>
+<div class="header">
+    <div class="balance"><span id="total-coins">0</span> DC</div>
+    <div style="font-size: 11px; color: #555;">РЕЖИМ: <span id="current-mode">CLICKER</span></div>
+</div>
 
-    <div id="screen-menu" class="screen active">
-        <div class="menu-container">
-            <h1 style="text-align: center; color: #f39c12;">Danila Hub</h1>
-            <div class="game-card">
-                <h3>Danila Clicker</h3>
-                <p>Твой бизнес. Фарми коины и покупай авто-ботов!</p>
-                <button class="play-btn" style="background:#e74c3c" onclick="showScreen('clicker')">ИГРАТЬ</button>
-            </div>
-            <div class="game-card">
-                <h3>Snake Retro</h3>
-                <p>Ешь яблоки — получай коины за каждое!</p>
-                <button class="play-btn" onclick="showScreen('snake')">ИГРАТЬ</button>
-            </div>
-            <div class="game-card">
-                <h3>Neon Jumper</h3>
-                <p>Прыгай вверх и прокачивай гаджеты.</p>
-                <button class="play-btn" onclick="showScreen('jumper')">ИГРАТЬ</button>
-            </div>
+<div class="nav-bar">
+    <button class="nav-btn active" onclick="showPage('games', this)">🎮 ИГРЫ</button>
+    <button class="nav-btn" onclick="showPage('shop', this)">🛒 МАГАЗИН</button>
+    <button class="nav-btn" onclick="tg.close()" style="color: #e74c3c;">🚪 ВЫХОД</button>
+</div>
+
+<div id="games-page" class="page active">
+    <div class="game-menu">
+        <div class="game-card">
+            <div><h3>Danila Clicker</h3><p>Классический фарм</p></div>
+            <button class="play-btn" onclick="openGame('clicker')">ИГРАТЬ</button>
+        </div>
+        <div class="game-card">
+            <div><h3>Neon Snake</h3><p>Ретро змейка со звуком</p></div>
+            <button class="play-btn" onclick="openGame('snake')">ИГРАТЬ</button>
+        </div>
+        <div class="game-card">
+            <div><h3>Square Jumper</h3><p>Следование за пальцем</p></div>
+            <button class="play-btn" onclick="openGame('jumper')">ИГРАТЬ</button>
         </div>
     </div>
+</div>
 
-    <div id="screen-clicker" class="screen">
-        <div class="balance-text"><span id="balance-val">0</span> DC</div>
-        <div id="click-button">CLICK</div>
-        <h3 style="margin-top:20px">МАГАЗИН КЛИКЕРА</h3>
-        <div class="shop-item">
-            <span>Пальцы +1 (Цена: <span id="c-pr">100</span>)</span>
-            <button onclick="buyUpgrade('click')" style="background:#27ae60; color:white; border:none; padding:8px; border-radius:5px">КУПИТЬ</button>
-        </div>
-        <div class="shop-item">
-            <span>Бот +5/сек (Цена: <span id="a-pr">500</span>)</span>
-            <button onclick="buyUpgrade('afk')" style="background:#27ae60; color:white; border:none; padding:8px; border-radius:5px">КУПИТЬ</button>
-        </div>
+<div id="clicker-game" class="page">
+    <div id="click-circle">CLICK</div>
+</div>
+
+<div id="snake-game" class="page">
+    <canvas id="snakeCanvas" width="300" height="300"></canvas>
+    <div class="snake-ctrl">
+        <button class="ctrl-btn" style="grid-column: 2" onclick="snDir='up'">↑</button>
+        <button class="ctrl-btn" style="grid-row: 2; grid-column: 1" onclick="snDir='left'">←</button>
+        <button class="ctrl-btn" style="grid-row: 2; grid-column: 2" onclick="snDir='down'">↓</button>
+        <button class="ctrl-btn" style="grid-row: 2; grid-column: 3" onclick="snDir='right'">→</button>
     </div>
+</div>
 
-    <div id="screen-snake" class="screen">
-        <h2 id="snake-score" style="color:#0f0">Score: 0</h2>
-        <canvas id="snakeCanvas" width="300" height="300"></canvas>
-        <div class="controls">
-            <button style="grid-column: 2;" onclick="snakeDir='up'">↑</button>
-            <button style="grid-column: 1;" onclick="snakeDir='left'">←</button>
-            <button style="grid-column: 2;" onclick="snakeDir='down'">↓</button>
-            <button style="grid-column: 3;" onclick="snakeDir='right military'">→</button>
-        </div>
-        <button onclick="startSnake()" style="margin-top:15px; padding:10px; background:#0f0; border:none; border-radius:5px; font-weight:bold">РЕСТАРТ</button>
-    </div>
+<div id="jumper-game" class="page">
+    <canvas id="jumperCanvas" width="300" height="400"></canvas>
+</div>
 
-    <div id="screen-jumper" class="screen">
-        <h2 id="jumper-score">Score: 0</h2>
-        <canvas id="jumperCanvas" width="300" height="400"></canvas>
-        <p>Нажимай влево/вправо для управления!</p>
-        <button onclick="startJumper()" style="margin-top:10px; padding:10px; background:#3498db; color:white; border:none; border-radius:5px">РЕСТАРТ</button>
-    </div>
+<div id="shop-page" class="page">
+    <h2 id="shop-title" style="color: var(--accent); margin-top: 20px;">МАГАЗИН</h2>
+    <div class="shop-list" id="shop-content"></div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // --- ГЛОБАЛЬНЫЕ ДАННЫЕ ---
-        let coins = parseFloat(localStorage.getItem('danila_coins')) || 0;
-        let clickPower = parseInt(localStorage.getItem('click_power')) || 1;
-        let afkPower = parseInt(localStorage.getItem('afk_power')) || 0;
+    // СОСТОЯНИЕ
+    let coins = parseFloat(localStorage.getItem('d_coins')) || 0;
+    let activeMode = 'clicker';
+    
+    // ПАРАМЕТРЫ ИГР
+    let clickPwr = 1;
+    let clickAuto = 0;
+    let snakeMult = 1;
+    let snakeSpeed = 120;
+    let jumpG = 0.5;
+    let jumpBoost = -12;
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.hub-nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById('screen-' + id).classList.add('active');
-            const navBtn = document.getElementById('nav-' + id);
-            if(navBtn) navBtn.classList.add('active');
-            
-            // Останавливаем игры при уходе
-            if(id !== 'snake') clearInterval(snakeInterval);
-            if(id !== 'jumper') jActive = false;
-            
-            if(id === 'snake') startSnake();
-            if(id === 'jumper') startJumper();
-            updateUI();
+    const shopData = {
+        clicker: [
+            { n: "Сильные пальцы", d: "+1 к клику", c: 50, f: () => clickPwr += 1 },
+            { n: "Кликер-Бот", d: "+5 в сек", c: 500, f: () => clickAuto += 5 },
+            { n: "Мега-Тап", d: "+10 к клику", c: 2500, f: () => clickPwr += 10 },
+            { n: "Серверная", d: "+100 в сек", c: 15000, f: () => clickAuto += 100 }
+        ],
+        snake: [
+            { n: "Питательные яблоки", d: "x2 за еду", c: 150, f: () => snakeMult += 1 },
+            { n: "Слоу-мо", d: "Замедлить змейку", c: 400, f: () => snakeSpeed += 10 },
+            { n: "Золотые фрукты", d: "x5 за еду", c: 2000, f: () => snakeMult += 4 }
+        ],
+        jumper: [
+            { n: "Легкие кроссовки", d: "Прыжок выше", c: 300, f: () => jumpBoost -= 2 },
+            { n: "Грави-костюм", d: "Медленное падение", c: 800, f: () => jumpG -= 0.1 },
+            { n: "Магнит монет", d: "Больше DC в полете", c: 5000, f: () => {} }
+        ]
+    };
+
+    function showPage(id, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id + '-page').classList.add('active');
+        if(btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
+        if(id === 'shop') renderShop();
+        stopGames();
+    }
 
-        function updateUI() {
-            document.getElementById('balance-val').innerText = Math.floor(coins).toLocaleString();
-            document.getElementById('c-pr').innerText = clickPower * 100;
-            document.getElementById('a-pr').innerText = (afkPower + 5) * 100;
-            localStorage.setItem('danila_coins', coins);
-            localStorage.setItem('click_power', clickPower);
-            localStorage.setItem('afk_power', afkPower);
-        }
+    function openGame(mode) {
+        activeMode = mode;
+        document.getElementById('current-mode').innerText = mode.toUpperCase();
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(mode + '-game').classList.add('active');
+        if(mode === 'snake') initSnake();
+        if(mode === 'jumper') initJumper();
+    }
 
-        // --- КЛИКЕР ---
-        document.getElementById('click-button').addEventListener('pointerdown', (e) => {
-            coins += clickPower;
-            const pop = document.createElement('div');
-            pop.className = 'pop-up';
-            pop.style.left = e.clientX + 'px'; pop.style.top = e.clientY + 'px';
-            pop.innerText = '+' + clickPower;
-            document.body.appendChild(pop);
-            setTimeout(() => pop.remove(), 1000);
-            updateUI();
+    function renderShop() {
+        const cont = document.getElementById('shop-content');
+        document.getElementById('shop-title').innerText = "МАГАЗИН: " + activeMode.toUpperCase();
+        cont.innerHTML = '';
+        shopData[activeMode].forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            div.innerHTML = `
+                <div class="info"><strong>${item.n}</strong><small>${item.d}</small></div>
+                <button class="buy-btn" onclick="buyItem('${activeMode}', ${index})" ${coins < item.c ? 'disabled' : ''}>${item.c} DC</button>
+            `;
+            cont.appendChild(div);
         });
+    }
 
-        function buyUpgrade(type) {
-            if(type === 'click' && coins >= clickPower * 100) {
-                coins -= clickPower * 100; clickPower++;
-            } else if(type === 'afk' && coins >= (afkPower + 5) * 100) {
-                coins -= (afkPower + 5) * 100; afkPower += 5;
-            }
+    function buyItem(mode, idx) {
+        const item = shopData[mode][idx];
+        if(coins >= item.c) {
+            coins -= item.c;
+            item.f();
+            item.c = Math.floor(item.c * 1.6);
             updateUI();
+            renderShop();
         }
+    }
 
-        // --- ЗМЕЙКА ---
-        const sCanvas = document.getElementById('snakeCanvas');
-        const sCtx = sCanvas.getContext('2d');
-        let snake, food, snakeDir, snakeInterval;
-        function startSnake() {
-            snake = [{x:10, y:10}]; food = {x:5, y:5}; snakeDir = 'right';
-            clearInterval(snakeInterval);
-            snakeInterval = setInterval(drawSnake, 120);
-        }
-        function drawSnake() {
-            sCtx.fillStyle = 'black'; sCtx.fillRect(0,0,300,300);
-            sCtx.fillStyle = '#0f0'; snake.forEach(b => sCtx.fillRect(b.x*15, b.y*15, 14, 14));
-            sCtx.fillStyle = 'red'; sCtx.fillRect(food.x*15, food.y*15, 14, 14);
-            let head = {...snake[0]};
-            if(snakeDir=='up') head.y--; if(snakeDir=='down') head.y++;
-            if(snakeDir=='left') head.x--; if(snakeDir=='right') head.x++;
-            if(head.x==food.x && head.y==food.y) {
-                coins += 10; updateUI();
-                food = {x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20)};
-                document.getElementById('snake-score').innerText = "Score: " + (snake.length);
-            } else { snake.pop(); }
-            if(head.x<0||head.x>=20||head.y<0||head.y>=20||snake.some(s=>s.x==head.x&&s.y==head.y)) {
-                clearInterval(snakeInterval); alert("Game Over!"); return;
-            }
-            snake.unshift(head);
-        }
+    function updateUI() {
+        document.getElementById('total-coins').innerText = Math.floor(coins).toLocaleString();
+        localStorage.setItem('d_coins', coins);
+    }
 
-        // --- ДЖАМПЕР ---
-        const jCanvas = document.getElementById('jumperCanvas');
-        const jCtx = jCanvas.getContext('2d');
-        let jActive, jPlayer, jPlatforms;
-        function startJumper() {
-            jActive = true; jPlayer = {x:140, y:300, vy:0};
-            jPlatforms = [{x:100, y:380, w:100}];
-            for(let i=0; i<5; i++) jPlatforms.push({x: Math.random()*240, y: i*80, w:60});
-            requestAnimationFrame(drawJumper);
-        }
-        function drawJumper() {
-            if(!jActive) return;
-            jCtx.fillStyle = '#111'; jCtx.fillRect(0,0,300,400);
-            jPlayer.vy += 0.4; jPlayer.y += jPlayer.vy;
-            jCtx.fillStyle = '#3498db';
-            jPlatforms.forEach(p => {
-                jCtx.fillRect(p.x, p.y, p.w, 10);
-                if(jPlayer.vy > 0 && jPlayer.x+20 > p.x && jPlayer.x < p.x+p.w && jPlayer.y+20 > p.y && jPlayer.y+20 < p.y+15) {
-                    jPlayer.vy = -10; coins += 5; updateUI();
-                }
-            });
-            if(jPlayer.y < 200) { let d = 200 - jPlayer.y; jPlayer.y = 200; jPlatforms.forEach(p => { p.y += d; if(p.y > 400) { p.y = 0; p.x = Math.random()*240; }}); }
-            jCtx.fillStyle = 'red'; jCtx.fillRect(jPlayer.x, jPlayer.y, 20, 20);
-            if(jPlayer.y > 400) { jActive = false; alert("Fall!"); return; }
-            requestAnimationFrame(drawJumper);
-        }
-        window.addEventListener('touchstart', (e) => {
-            if(!jActive) return;
-            if(e.touches[0].clientX < window.innerWidth/2) jPlayer.x -= 30; else jPlayer.x += 30;
-        });
-
-        // AFK ДОХОД
-        setInterval(() => { if(afkPower > 0) { coins += afkPower/10; updateUI(); }}, 100);
-
+    // КЛИКЕР ЛОГИКА
+    document.getElementById('click-circle').onpointerdown = (e) => {
+        coins += clickPwr;
+        const pop = document.createElement('div');
+        pop.className = 'pop';
+        pop.style.left = e.clientX + 'px'; pop.style.top = e.clientY + 'px';
+        pop.innerText = '+' + clickPwr;
+        document.body.appendChild(pop);
+        setTimeout(() => pop.remove(), 1000);
         updateUI();
-    </script>
+    };
+
+    // ЗМЕЙКА ЛОГИКА
+    const snCanvas = document.getElementById('snakeCanvas');
+    const snCtx = snCanvas.getContext('2d');
+    let snake, snFood, snDir, snInt;
+    function initSnake() {
+        snake = [{x:10, y:10}]; snFood = {x:5, y:5}; snDir = 'right';
+        clearInterval(snInt);
+        snInt = setInterval(drawSnake, snakeSpeed);
+    }
+    function drawSnake() {
+        snCtx.fillStyle = '#000'; snCtx.fillRect(0,0,300,300);
+        snCtx.fillStyle = '#0f0'; snake.forEach(b => snCtx.fillRect(b.x*15, b.y*15, 14, 14));
+        snCtx.fillStyle = 'red'; snCtx.fillRect(snFood.x*15, snFood.y*15, 14, 14);
+        let head = {...snake[0]};
+        if(snDir=='up') head.y--; if(snDir=='down') head.y++;
+        if(snDir=='left') head.x--; if(snDir=='right') head.x++;
+        if(head.x==snFood.x && head.y==snFood.y) {
+            coins += 10 * snakeMult; updateUI();
+            snFood = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
+        } else { snake.pop(); }
+        if(head.x<0||head.x>=20||head.y<0||head.y>=20||snake.some(s=>s.x==head.x&&s.y==head.y)) { initSnake(); return; }
+        snake.unshift(head);
+    }
+
+    // ДЖАМПЕР ЛОГИКА
+    const jmCanvas = document.getElementById('jumperCanvas');
+    const jmCtx = jmCanvas.getContext('2d');
+    let jActive, jPlayer, jPlats;
+    function initJumper() {
+        jActive = true; jPlayer = {x:140, y:300, vy:0};
+        jPlats = [{x:100, y:380, w:100}];
+        for(let i=0; i<6; i++) jPlats.push({x:Math.random()*230, y:i*70, w:70});
+        requestAnimationFrame(drawJumper);
+    }
+    function drawJumper() {
+        if(!jActive || activeMode !== 'jumper') return;
+        jmCtx.fillStyle = '#050505'; jmCtx.fillRect(0,0,300,400);
+        jPlayer.vy += jumpG; jPlayer.y += jPlayer.vy;
+        jmCtx.fillStyle = '#3498db';
+        jPlats.forEach(p => {
+            jmCtx.fillRect(p.x, p.y, p.w, 10);
+            if(jPlayer.vy > 0 && jPlayer.x+20 > p.x && jPlayer.x < p.x+p.w && jPlayer.y+20 > p.y && jPlayer.y+20 < p.y+15) {
+                jPlayer.vy = jumpBoost; coins += 2; updateUI();
+            }
+        });
+        if(jPlayer.y < 150) { 
+            let d = 150 - jPlayer.y; jPlayer.y = 150; 
+            jPlats.forEach(p => { p.y += d; if(p.y > 400) { p.y = 0; p.x = Math.random()*230; }});
+        }
+        jmCtx.fillStyle = '#e74c3c'; jmCtx.fillRect(jPlayer.x, jPlayer.y, 20, 20);
+        if(jPlayer.y > 420) initJumper();
+        requestAnimationFrame(drawJumper);
+    }
+    jmCanvas.addEventListener('touchmove', (e) => {
+        let rect = jmCanvas.getBoundingClientRect();
+        jPlayer.x = e.touches[0].clientX - rect.left - 10;
+    });
+
+    function stopGames() {
+        clearInterval(snInt);
+        jActive = false;
+    }
+
+    setInterval(() => { if(clickAuto > 0) { coins += clickAuto / 10; updateUI(); }}, 100);
+
+    updateUI();
+</script>
 </body>
 </html>
