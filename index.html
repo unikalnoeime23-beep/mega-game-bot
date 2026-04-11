@@ -11,7 +11,8 @@
         body { font-family: 'Press Start 2P', cursive; background: #1a1a1a; color: var(--dark); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; touch-action: none; }
         .console { flex: 1; background: var(--bg); margin: 8px; border: 10px solid #333; border-radius: 15px; display: flex; flex-direction: column; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.4); }
         .header { padding: 8px; border-bottom: 3px solid var(--dark); display: flex; flex-direction: column; background: rgba(0,0,0,0.05); }
-        .top-row { display: flex; justify-content: space-between; font-size: 8px; margin-bottom: 5px; }
+        .top-row { display: flex; justify-content: space-between; font-size: 8px; margin-bottom: 4px; }
+        .status-row { font-size: 6px; color: var(--dark); margin-bottom: 5px; text-transform: uppercase; }
         
         /* Шкала прогресса цели */
         .goal-bar { width: 100%; height: 6px; border: 1px solid var(--dark); background: transparent; overflow: hidden; }
@@ -39,6 +40,10 @@
 
         .pop { position: absolute; font-size: 8px; pointer-events: none; animation: popUp 0.6s forwards; color: var(--dark); }
         @keyframes popUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+
+        /* Кнопка Престижа */
+        .prestige-btn { background: #e74c3c; color: white; border: 4px solid #c0392b; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; width: 100%; margin-top: 10px; cursor: pointer; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(0.95); } to { transform: scale(1.02); } }
     </style>
 </head>
 <body>
@@ -46,8 +51,11 @@
 <div class="console">
     <div class="header">
         <div class="top-row">
-            <span>DC:<span id="dc-val">0</span></span>
-            <span>ЦЕЛЬ:<span id="percent">0</span>%</span>
+            <span>DC:<span id="dc-val">0</span> <span id="mult-display" style="color:#c0392b; font-size:6px;"></span></span>
+            <span>LVL:<span id="player-level">0</span>/100</span>
+        </div>
+        <div class="status-row">
+            СТАТУС: <strong id="prestige-name">СМЕРТНЫЙ</strong>
         </div>
         <div class="goal-bar"><div id="goal-fill"></div></div>
     </div>
@@ -62,6 +70,7 @@
         <div class="card"><span>ПИКСЕЛЬ ТАП</span><button class="buy-btn" onclick="startGame('clicker')">ВЫБРАТЬ</button></div>
         <div class="card"><span>ЗМЕЙКА</span><button class="buy-btn" onclick="startGame('snake')">ВЫБРАТЬ</button></div>
         <div class="card"><span>ПРЫЖОК</span><button class="buy-btn" onclick="startGame('jumper')">ВЫБРАТЬ</button></div>
+        <div id="p-area" style="width: 85%;"></div>
     </div>
 
     <div id="v-clicker" class="view">
@@ -96,8 +105,23 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // УНИКАЛЬНЫЕ ИМЕНА ПРЕСТИЖЕЙ
+    const prestigeTitles = [
+        "СМЕРТНЫЙ", 
+        "ПРОБУДИВШИЙСЯ", 
+        "ИСКАТЕЛЬ ИСТИНЫ", 
+        "ВЗЛОМЩИК МАТРИЦЫ", 
+        "КИБЕР-ЖРЕЦ", 
+        "ВЛАСТЕЛИН КОДА", 
+        "АРХИТЕКТОР СИСТЕМЫ", 
+        "ПОВЕЛИТЕЛЬ МУЛЬТИВЕРСА", 
+        "АБСОЛЮТНЫЙ ХАБ-МАГНАТ", 
+        "СОЗДАТЕЛЬ РЕАЛЬНОСТИ"
+    ];
+
     let coins = parseFloat(localStorage.getItem('dc_v4')) || 0;
-    const GOAL = 1000000; // Цель: 1 миллион DC
+    let prestigeCount = parseInt(localStorage.getItem('dc_prestige_level')) || 0; 
+    let mult = prestigeCount + 1; // 0 престиж = x1, 1 престиж = x2, 2 = x3 и т.д.
 
     let pwr = 1, auto = 0, snS = 130, snM = 1, jJ = -9, jG = 0.35, curGame = 'clicker', jDir = 0, gameLoop;
 
@@ -126,11 +150,40 @@
 
     function updateUI() {
         document.getElementById('dc-val').innerText = Math.floor(coins);
-        let progress = Math.min(100, (coins / GOAL) * 100);
-        document.getElementById('goal-fill').style.width = progress + '%';
-        document.getElementById('percent').innerText = Math.floor(progress);
+        
+        // Математика уровней: База 1.185246 дает ровно 100 уровень на 1 млрд.
+        let currentLevel = coins < 50 ? 0 : Math.min(100, Math.floor(Math.log(coins / 50) / Math.log(1.185246)) + 1);
+        document.getElementById('player-level').innerText = currentLevel;
+
+        let nextCoins = currentLevel >= 100 ? 1000000000 : 50 * Math.pow(1.185246, currentLevel);
+        let prevCoins = currentLevel === 0 ? 0 : 50 * Math.pow(1.185246, currentLevel - 1);
+        let progress = currentLevel >= 100 ? 100 : ((coins - prevCoins) / (nextCoins - prevCoins)) * 100;
+        
+        document.getElementById('goal-fill').style.width = Math.max(0, Math.min(100, progress)) + '%';
+        
+        // Обновляем титул
+        let titleName = prestigeTitles[Math.min(prestigeCount, prestigeTitles.length - 1)];
+        if (prestigeCount >= prestigeTitles.length) titleName += " +" + (prestigeCount - prestigeTitles.length + 1);
+        document.getElementById('prestige-name').innerText = titleName;
+
+        document.getElementById('mult-display').innerText = "(X" + mult + ")";
+
+        const pArea = document.getElementById('p-area');
+        if(currentLevel >= 100) { 
+            pArea.innerHTML = `<button class="prestige-btn" onclick="doPrestige()">ПРЕСТИЖ (МНОЖИТЕЛЬ X${mult + 1})</button>`; 
+        } else { pArea.innerHTML = ''; }
+
         localStorage.setItem('dc_v4', coins);
-        if(progress >= 100) { document.getElementById('dc-val').style.color = 'white'; }
+        localStorage.setItem('dc_prestige_level', prestigeCount);
+    }
+
+    function doPrestige() {
+        if(confirm("Активировать ПРЕСТИЖ? Твой текущий прогресс сбросится, но фарм увеличится до x" + (mult + 1) + "!")) {
+            prestigeCount++;
+            localStorage.setItem('dc_prestige_level', prestigeCount);
+            localStorage.removeItem('dc_v4'); // Сброс монет
+            window.location.reload(); // Чистая перезагрузка
+        }
     }
 
     function renderShop() {
@@ -151,9 +204,11 @@
 
     // КЛИКЕР + АРТЕФАКТЫ
     function doTap(e) {
-        beep(400, 0.05); coins += pwr; updateUI();
-        if(Math.random() < 0.02) spawnArtifact(); // 2% шанс появления бонуса
-        let p = document.createElement('div'); p.className='pop'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+pwr; document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
+        beep(400, 0.05); 
+        let gain = pwr * mult;
+        coins += gain; updateUI();
+        if(Math.random() < 0.02) spawnArtifact();
+        let p = document.createElement('div'); p.className='pop'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+Math.floor(gain); document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
     }
 
     function spawnArtifact() {
@@ -167,10 +222,10 @@
     function catchArtifact(e) {
         e.stopPropagation();
         beep(900, 0.2);
-        let bonus = pwr * 50;
+        let bonus = (pwr * 50) * mult;
         coins += bonus;
         document.getElementById('artifact').style.display = 'none';
-        alert("АРТЕФАКТ НАЙДЕН: +" + bonus + " DC!");
+        alert("АРТЕФАКТ НАЙДЕН: +" + Math.floor(bonus) + " DC!");
         updateUI();
     }
 
@@ -183,7 +238,7 @@
         sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,180,180); sX.fillStyle = '#0f380f';
         sn.forEach(p => sX.fillRect(p.x*10, p.y*10, 9, 9)); sX.strokeRect(sf.x*10, sf.y*10, 9, 9);
         let h = {...sn[0]}; if(sd=='up') h.y--; if(sd=='down') h.y++; if(sd=='left') h.x--; if(sd=='right') h.x++;
-        if(h.x==sf.x && h.y==sf.y) { beep(800, 0.1); coins += 10*snM; updateUI(); sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)}; } else sn.pop();
+        if(h.x==sf.x && h.y==sf.y) { beep(800, 0.1); coins += (10*snM) * mult; updateUI(); sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)}; } else sn.pop();
         if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) { beep(100, 0.2); initSnake(); } else sn.unshift(h);
     }
 
@@ -202,7 +257,7 @@
         jPlats.forEach(p => {
             p.x += p.vx; if(p.x<0||p.x>155) p.vx*=-1;
             jX.fillRect(p.x, p.y, p.w, 7);
-            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) { beep(500, 0.05); jp.vy = jJ; coins += 2; updateUI(); }
+            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) { beep(500, 0.05); jp.vy = jJ; coins += 2 * mult; updateUI(); }
         });
         if(jp.y < 80) { let d = 80 - jp.y; jp.y = 80; jPlats.forEach(p => { p.y += d; if(p.y > 250) { p.y = 0; p.x = Math.random()*150; }}); }
         jX.fillRect(jp.x, jp.y, 15, 15);
@@ -210,7 +265,7 @@
         if(jp.x < 0) jp.x = 200; if(jp.x > 200) jp.x = 0;
     }
 
-    setInterval(() => { if(auto > 0) { coins += auto/10; updateUI(); }}, 100);
+    setInterval(() => { if(auto > 0) { coins += (auto/10) * mult; updateUI(); }}, 100);
     updateUI();
 </script>
 </body>
