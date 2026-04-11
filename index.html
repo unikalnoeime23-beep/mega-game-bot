@@ -6,31 +6,82 @@
     <title>Danila Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #fff; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .game-card { width: 85%; background: #1e1e1e; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #333; text-align: left; transition: 0.3s; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #0f0f0f; 
+            color: #fff; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+        }
+        
+        h1 { color: #f39c12; margin-bottom: 30px; text-shadow: 0 0 10px rgba(243, 156, 18, 0.3); }
+
+        .game-card { 
+            width: 85%; 
+            background: #1e1e1e; 
+            padding: 20px; 
+            border-radius: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid #333; 
+            text-align: left; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
         .game-card:active { transform: scale(0.95); background: #252525; }
-        .game-card h3 { margin: 0; color: #f39c12; }
-        .game-card p { color: #888; font-size: 14px; margin: 5px 0 10px 0; }
-        .play-link { display: block; width: 100%; background: #3498db; color: white; text-align: center; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold; }
+        
+        .game-card h3 { margin: 0; color: #f39c12; font-size: 22px; }
+        .game-card p { color: #888; font-size: 14px; margin: 8px 0 15px 0; }
+        
+        .play-link { 
+            display: block; 
+            width: 100%; 
+            background: #3498db; 
+            color: white; 
+            text-align: center; 
+            text-decoration: none; 
+            padding: 12px 0; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            box-shadow: 0 4px #2980b9;
+        }
+        
+        .play-link:active { transform: translateY(2px); box-shadow: 0 2px #2980b9; }
+
+        /* Специальный цвет для кнопки кликера */
+        .clicker-btn { background: #e74c3c; box-shadow: 0 4px #c0392b; }
+        .clicker-btn:active { box-shadow: 0 2px #c0392b; }
     </style>
 </head>
 <body>
     <h1>Danila Hub</h1>
     
     <div class="game-card">
+        <h3>Danila Clicker</h3>
+        <p>Фарми DanilaCoins и покупай авто-ботов. Твой основной бизнес!</p>
+        <a href="clicker.html" class="play-link clicker-btn">ИГРАТЬ</a>
+    </div>
+
+    <div class="game-card">
         <h3>Snake Retro</h3>
-        <p>Классическая змейка. Улучшай скорость и множитель очков!</p>
+        <p>Классическая змейка. Ешь яблоки, чтобы заработать коины!</p>
         <a href="snake.html" class="play-link">ИГРАТЬ</a>
     </div>
 
     <div class="game-card">
         <h3>Jumper Game</h3>
-        <p>Прыгай выше всех. Улучшай высоту прыжка и платформы!</p>
+        <p>Прыгай по неоновым платформам. Улучшай гравитацию!</p>
         <a href="jumper.html" class="play-link">ИГРАТЬ</a>
     </div>
 
     <script>
-        window.Telegram.WebApp.expand();
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+        tg.ready();
     </script>
 </body>
 </html>
