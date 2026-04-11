@@ -75,7 +75,7 @@
         <div id="artifact" onpointerdown="catchArtifact(event)">???</div>
     </div>
 
-    <div id="v-snake" class="view">
+    <div id="v-snake" class="view" style="transition: transform 0.1s;">
         <canvas id="snakeCanvas" width="180" height="180"></canvas>
         <div class="controls">
             <button class="btn" style="grid-column: 2" onpointerdown="setDir('up')">↑</button>
@@ -112,14 +112,14 @@
     let prestigeCount = parseInt(localStorage.getItem('dc_prestige_level')) || 0; 
     let mult = prestigeCount + 1;
 
-    // ЗАГРУЗКА УРОВНЕЙ ИЗ ПАМЯТИ
+    // ЗАГРУЗКА УРОВНЕЙ
     let lvls = JSON.parse(localStorage.getItem('dc_lvls_v4')) || {
         c_pwr: 0, c_auto: 0, c_dbl: 0, c_kick: 0,
-        s_mult: 0, s_slow: 0,
+        s_mult: 0, s_slow: 0, s_gold: 0,
         j_jmp: 0, j_grv: 0
     };
 
-    // БАЗОВЫЕ ЗНАЧЕНИЯ С УЧЕТОМ УРОВНЕЙ
+    // БАЗОВЫЕ ЗНАЧЕНИЯ
     let pwr = 1 + lvls.c_pwr;
     let auto = lvls.c_auto * 5;
     let snM = 1 + lvls.s_mult;
@@ -132,7 +132,6 @@
     const aCtx = new (window.AudioContext || window.webkitAudioContext)();
     function beep(f, d) { try { const o = aCtx.createOscillator(); const g = aCtx.createGain(); o.type='square'; o.frequency.value=f; g.gain.value=0.03; o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime+d); } catch(e){} }
 
-    // ОБНОВЛЕННЫЕ УЛУЧШЕНИЯ
     const upgrades = {
         clicker: [
             {id:'c_pwr', n:"СИЛА ТАПА", b:50, f:()=>pwr++}, 
@@ -142,7 +141,8 @@
         ],
         snake: [
             {id:'s_mult', n:"ЯБЛОКИ X2", b:150, f:()=>snM++}, 
-            {id:'s_slow', n:"МЕДЛЕННО", b:500, f:()=>snS-=10}
+            {id:'s_slow', n:"МЕДЛЕННО", b:500, f:()=>snS-=10},
+            {id:'s_gold', n:"ШАНС ЗОЛОТА", b:1200, f:()=>{}}
         ],
         jumper: [
             {id:'j_jmp', n:"ПРУЖИНЫ", b:300, f:()=>jJ-=0.5}, 
@@ -203,7 +203,7 @@
         const list = document.getElementById('shop-list'); list.innerHTML = '';
         let m = upgrades[curGame] ? curGame : 'clicker';
         upgrades[m].forEach((it, i) => {
-            let currentLvl = lvls[it.id];
+            let currentLvl = lvls[it.id] || 0;
             let price = Math.floor(it.b * Math.pow(1.8, currentLvl));
             let d = document.createElement('div'); d.className = 'card';
             d.innerHTML = `<div style="font-size:7px">${it.n} [LVL:${currentLvl}]</div><button class="buy-btn" id="b-${i}" onclick="buy('${m}',${i}, '${it.id}')">${price} DC</button>`;
@@ -216,18 +216,15 @@
         let it = upgrades[m][i];
         let price = Math.floor(it.b * Math.pow(1.8, lvls[id]));
         if(coins >= price) { 
-            beep(600, 0.1); 
-            coins -= price; 
-            lvls[id]++; 
-            it.f(); 
-            updateUI(); 
-            renderShop(); 
+            beep(600, 0.1); coins -= price; lvls[id]++; it.f(); 
+            updateUI(); renderShop(); 
         }
     }
 
+    // --- КЛИКЕР ---
     function doTap(e) {
         beep(400, 0.05); 
-        let dbl = Math.random() < (lvls.c_dbl * 0.05) ? 2 : 1; // 5% шанс на уровень сделать х2
+        let dbl = Math.random() < (lvls.c_dbl * 0.05) ? 2 : 1;
         let gain = pwr * mult * dbl;
         coins += gain; updateUI();
         if(Math.random() < 0.02) spawnArtifact();
@@ -239,7 +236,6 @@
         document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
     }
 
-    // ЛОГИКА "БРАТУХИ" (Удар ногой)
     function doKick() {
         let bonus = 2000 * lvls.c_kick * mult;
         coins += bonus; updateUI();
@@ -247,67 +243,121 @@
         if (curGame === 'clicker') {
             beep(300, 0.1); setTimeout(()=>beep(150, 0.2), 150);
             let k = document.createElement('div');
-            k.innerHTML = '🥷';
-            k.style.position = 'absolute';
-            k.style.fontSize = '45px';
-            k.style.left = '-60px';
-            k.style.top = '15%';
-            k.style.transition = 'all 0.3s ease-in';
-            k.style.zIndex = '100';
-            document.getElementById('v-clicker').appendChild(k);
+            k.innerHTML = '🥷'; k.style.position = 'absolute'; k.style.fontSize = '45px';
+            k.style.left = '-60px'; k.style.top = '15%'; k.style.transition = 'all 0.3s ease-in';
+            k.style.zIndex = '100'; document.getElementById('v-clicker').appendChild(k);
             
             setTimeout(() => {
-                k.style.left = '40%';
-                k.style.top = '35%';
-                k.innerHTML = '🥷🦵';
+                k.style.left = '40%'; k.style.top = '35%'; k.innerHTML = '🥷🦵';
                 
-                // Тряска экрана
                 let view = document.getElementById('v-clicker');
                 view.style.transform = 'translate(8px, 8px)';
                 setTimeout(() => view.style.transform = 'translate(-8px, -8px)', 50);
                 setTimeout(() => view.style.transform = 'translate(0, 0)', 100);
 
-                // Надпись BAM!
                 let bam = document.createElement('div');
                 bam.innerText = 'BAM!\n+' + Math.floor(bonus);
-                bam.style.position = 'absolute';
-                bam.style.color = '#ffeb3b'; 
+                bam.style.position = 'absolute'; bam.style.color = '#ffeb3b'; 
                 bam.style.textShadow = '2px 2px 0 #c0392b, -1px -1px 0 #000';
-                bam.style.fontSize = '18px';
-                bam.style.fontWeight = 'bold';
-                bam.style.textAlign = 'center';
-                bam.style.left = '50%';
-                bam.style.top = '50%';
-                bam.style.transform = 'translate(-50%, -50%)';
-                bam.style.zIndex = '101';
+                bam.style.fontSize = '18px'; bam.style.fontWeight = 'bold';
+                bam.style.textAlign = 'center'; bam.style.left = '50%'; bam.style.top = '50%';
+                bam.style.transform = 'translate(-50%, -50%)'; bam.style.zIndex = '101';
                 document.getElementById('v-clicker').appendChild(bam);
                 
-                setTimeout(() => {
-                    k.style.left = '120%';
-                    k.style.top = '80%';
-                    bam.remove();
-                }, 700);
+                setTimeout(() => { k.style.left = '120%'; k.style.top = '80%'; bam.remove(); }, 700);
                 setTimeout(() => k.remove(), 1200);
             }, 50);
         } else {
-            beep(250, 0.1); // Тихий звук удара если мы в другой вкладке
+            beep(250, 0.1); 
         }
     }
 
-    // ЗМЕЙКА
+    // --- ПРОКАЧЕННАЯ ЗМЕЙКА С ПРИКОЛАМИ ---
     const sC = document.getElementById('snakeCanvas'), sX = sC.getContext('2d');
-    let sn, sf, sd;
-    function initSnake() { sn = [{x:8, y:8}]; sf = {x:4, y:4}; sd = 'right'; clearInterval(gameLoop); gameLoop = setInterval(drawSnake, snS); }
+    let sn, sf, sd, sGold, sPoison;
+    function initSnake() { 
+        sn = [{x:8, y:8}]; sf = {x:4, y:4}; sGold = null; sPoison = null; sd = 'right'; 
+        clearInterval(gameLoop); gameLoop = setInterval(drawSnake, snS); 
+    }
     function setDir(d) { if(d=='up'&&sd!='down') sd='up'; if(d=='down'&&sd!='up') sd='down'; if(d=='left'&&sd!='right') sd='left'; if(d=='right'&&sd!='left') sd='right'; }
+    
     function drawSnake() {
-        sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,180,180); sX.fillStyle = '#0f380f';
-        sn.forEach(p => sX.fillRect(p.x*10, p.y*10, 9, 9)); sX.strokeRect(sf.x*10, sf.y*10, 9, 9);
+        sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,180,180); 
+        
+        // Золотое Яблоко (Мерцает)
+        if (sGold) {
+            if (Math.floor(Date.now() / 150) % 2 === 0) {
+                sX.fillStyle = '#0f380f'; sX.fillRect(sGold.x*10, sGold.y*10, 9, 9);
+            } else {
+                sX.strokeStyle = '#0f380f'; sX.lineWidth = 2; sX.strokeRect(sGold.x*10+1, sGold.y*10+1, 7, 7);
+            }
+        }
+        
+        // Мухомор (Крестик)
+        if (sPoison) {
+            sX.fillStyle = '#0f380f';
+            sX.fillRect(sPoison.x*10+3, sPoison.y*10, 3, 9);
+            sX.fillRect(sPoison.x*10, sPoison.y*10+3, 9, 3);
+        }
+
+        // Отрисовка Змеи
+        sX.fillStyle = '#0f380f';
+        sn.forEach((p, i) => { 
+            sX.fillRect(p.x*10, p.y*10, 9, 9); 
+            // Рисуем глаза на голове
+            if (i === 0) {
+                sX.fillStyle = '#8bac0f';
+                if(sd=='up') { sX.fillRect(p.x*10+2, p.y*10+2, 2, 2); sX.fillRect(p.x*10+5, p.y*10+2, 2, 2); }
+                if(sd=='down') { sX.fillRect(p.x*10+2, p.y*10+5, 2, 2); sX.fillRect(p.x*10+5, p.y*10+5, 2, 2); }
+                if(sd=='left') { sX.fillRect(p.x*10+2, p.y*10+2, 2, 2); sX.fillRect(p.x*10+2, p.y*10+5, 2, 2); }
+                if(sd=='right') { sX.fillRect(p.x*10+5, p.y*10+2, 2, 2); sX.fillRect(p.x*10+5, p.y*10+5, 2, 2); }
+                sX.fillStyle = '#0f380f'; // Возвращаем цвет
+            }
+        }); 
+        
+        // Обычная Еда (с точкой внутри)
+        sX.strokeStyle = '#0f380f'; sX.lineWidth = 1; sX.strokeRect(sf.x*10, sf.y*10, 9, 9);
+        sX.fillRect(sf.x*10+3, sf.y*10+3, 3, 3);
+
         let h = {...sn[0]}; if(sd=='up') h.y--; if(sd=='down') h.y++; if(sd=='left') h.x--; if(sd=='right') h.x++;
-        if(h.x==sf.x && h.y==sf.y) { beep(800, 0.1); coins += (10*snM) * mult; updateUI(); sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)}; } else sn.pop();
-        if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) { beep(100, 0.2); initSnake(); } else sn.unshift(h);
+        
+        let ate = false;
+        if(h.x==sf.x && h.y==sf.y) { 
+            // Съел обычное
+            beep(800, 0.1); coins += (10*snM) * mult; updateUI(); 
+            sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)};
+            ate = true;
+            
+            // Шансы на спавн спец-еды
+            if(Math.random() < 0.15) sPoison = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)};
+            if(Math.random() < 0.05 + (lvls.s_gold * 0.02)) sGold = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)};
+            
+        } else if (sGold && h.x==sGold.x && h.y==sGold.y) { 
+            // Съел Золото
+            beep(1200, 0.2); coins += (100*snM) * mult; updateUI(); sGold = null; ate = true;
+            let pop = document.createElement('div'); pop.className='pop'; pop.innerText="JACKPOT!";
+            pop.style.left = '35%'; pop.style.top = '40%';
+            document.getElementById('v-snake').appendChild(pop); setTimeout(()=>pop.remove(), 800);
+            
+        } else if (sPoison && h.x==sPoison.x && h.y==sPoison.y) { 
+            // Съел Мухомор
+            beep(200, 0.3); coins -= (20*snM) * mult; if(coins<0) coins=0; updateUI(); sPoison = null;
+            
+            let v = document.getElementById('v-snake'); v.style.transform = 'translate(8px, 8px)';
+            setTimeout(() => v.style.transform = 'translate(-8px, -8px)', 50);
+            setTimeout(() => v.style.transform = 'translate(0, 0)', 100);
+            
+            if(sn.length > 2) sn.pop(); // Отрезаем хвост
+        }
+
+        if(!ate) sn.pop(); // Движение
+
+        // Проверка смерти
+        if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) { beep(100, 0.2); initSnake(); } 
+        else sn.unshift(h);
     }
 
-    // ДЖАМПЕР ПРОКАЧЕННЫЙ С МЕТРАМИ И ФОНАМИ
+    // --- ДЖАМПЕР ---
     const jC = document.getElementById('jumperCanvas'), jX = jC.getContext('2d');
     let jp, jPlats;
     let jDist = 0, jMeters = 0, lastMs = 0;
@@ -315,8 +365,12 @@
     let jBg = bgList[0];
 
     function getNewPlat(y) {
+        let rnd = Math.random();
+        let type = 0;
+        if (rnd > 0.85) type = 1; else if (rnd > 0.65) type = 2;
         let w = 40 + Math.random() * 15;
-        return { x: Math.random() * (200 - w), y: y, w: w };
+        let vx = Math.random() > 0.7 ? (Math.random() > 0.5 ? 1.5 : -1.5) : 0;
+        return { x: Math.random() * (200 - w), y: y, w: w, vx: vx, type: type, broken: false };
     }
 
     function initJumper() { 
@@ -332,8 +386,24 @@
         jX.fillStyle = '#0f380f';
         
         jPlats.forEach(p => {
-            jX.fillRect(p.x, p.y, p.w, 7);
-            if(jp.vy > 0 && jp.x + 15 > p.x && jp.x < p.x + p.w && jp.y + 15 > p.y && jp.y + 15 < p.y + 10) { beep(500, 0.05); jp.vy = jJ; coins += 2 * mult; updateUI(); }
+            if(p.broken) return; 
+            p.x += p.vx; 
+            if(p.x < 0 || p.x > (200 - p.w)) p.vx *= -1; 
+            
+            if (p.type === 1) { 
+                jX.fillRect(p.x, p.y + 4, p.w, 3); jX.fillRect(p.x + 5, p.y, 5, 4); jX.fillRect(p.x + p.w - 10, p.y, 5, 4);
+            } else if (p.type === 2) { 
+                for(let i=0; i<p.w; i+=8) jX.fillRect(p.x + i, p.y, 5, 7);
+            } else { 
+                jX.fillRect(p.x, p.y, p.w, 7);
+            }
+
+            if(jp.vy > 0 && jp.x + 15 > p.x && jp.x < p.x + p.w && jp.y + 15 > p.y && jp.y + 15 < p.y + 10) { 
+                if (p.type === 1) { jp.vy = jJ * 1.4; coins += 5 * mult; beep(700, 0.1); } 
+                else if (p.type === 2) { jp.vy = jJ; coins += 2 * mult; p.broken = true; beep(300, 0.05); } 
+                else { jp.vy = jJ; coins += 2 * mult; beep(500, 0.05); }
+                updateUI(); 
+            }
         });
 
         if(jp.y < 80) { 
@@ -347,17 +417,16 @@
 
         jX.fillStyle = '#0f380f'; jX.font = "8px 'Press Start 2P'"; jX.fillText(jMeters + "M", 5, 15);
 
-        // Робот
         jX.fillStyle = '#0f380f';
-        jX.fillRect(jp.x + 3, jp.y, 9, 5); // Голова
-        jX.fillRect(jp.x, jp.y + 5, 15, 8); // Тело
-        jX.fillStyle = jBg; jX.fillRect(jp.x + 4, jp.y + 7, 7, 3); // Визор
+        jX.fillRect(jp.x + 3, jp.y, 9, 5); 
+        jX.fillRect(jp.x, jp.y + 5, 15, 8); 
+        jX.fillStyle = jBg; jX.fillRect(jp.x + 4, jp.y + 7, 7, 3); 
         jX.fillStyle = '#0f380f';
         
-        if(jp.vy < 0) { // Турбина
+        if(jp.vy < 0) { 
             if(jp.frame % 4 < 2) jX.fillRect(jp.x + 4, jp.y + 13, 7, 5);
             else { jX.fillRect(jp.x + 2, jp.y + 13, 3, 4); jX.fillRect(jp.x + 10, jp.y + 13, 3, 4); }
-        } else { // Ножки
+        } else { 
             jX.fillRect(jp.x + 2, jp.y + 13, 3, 3); jX.fillRect(jp.x + 10, jp.y + 13, 3, 3);
         }
 
@@ -365,14 +434,9 @@
         if(jp.x < -15) jp.x = 200; if(jp.x > 200) jp.x = -15; 
     }
 
-    // ГЛОБАЛЬНЫЙ ТАЙМЕР (Авто-бот и Братуха)
     setInterval(() => { 
         if(auto > 0) { coins += (auto/10) * mult; updateUI(); }
-        
-        if(lvls.c_kick > 0) {
-            kickTimer += 100;
-            if(kickTimer >= 10000) { kickTimer = 0; doKick(); }
-        }
+        if(lvls.c_kick > 0) { kickTimer += 100; if(kickTimer >= 10000) { kickTimer = 0; doKick(); } }
     }, 100);
 
     function spawnArtifact() {
