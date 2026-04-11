@@ -121,7 +121,7 @@
 
     let coins = parseFloat(localStorage.getItem('dc_v4')) || 0;
     let prestigeCount = parseInt(localStorage.getItem('dc_prestige_level')) || 0; 
-    let mult = prestigeCount + 1; // 0 престиж = x1, 1 престиж = x2, 2 = x3 и т.д.
+    let mult = prestigeCount + 1;
 
     let pwr = 1, auto = 0, snS = 130, snM = 1, jJ = -9, jG = 0.35, curGame = 'clicker', jDir = 0, gameLoop;
 
@@ -151,7 +151,6 @@
     function updateUI() {
         document.getElementById('dc-val').innerText = Math.floor(coins);
         
-        // Математика уровней: База 1.185246 дает ровно 100 уровень на 1 млрд.
         let currentLevel = coins < 50 ? 0 : Math.min(100, Math.floor(Math.log(coins / 50) / Math.log(1.185246)) + 1);
         document.getElementById('player-level').innerText = currentLevel;
 
@@ -161,7 +160,6 @@
         
         document.getElementById('goal-fill').style.width = Math.max(0, Math.min(100, progress)) + '%';
         
-        // Обновляем титул
         let titleName = prestigeTitles[Math.min(prestigeCount, prestigeTitles.length - 1)];
         if (prestigeCount >= prestigeTitles.length) titleName += " +" + (prestigeCount - prestigeTitles.length + 1);
         document.getElementById('prestige-name').innerText = titleName;
@@ -181,8 +179,8 @@
         if(confirm("Активировать ПРЕСТИЖ? Твой текущий прогресс сбросится, но фарм увеличится до x" + (mult + 1) + "!")) {
             prestigeCount++;
             localStorage.setItem('dc_prestige_level', prestigeCount);
-            localStorage.removeItem('dc_v4'); // Сброс монет
-            window.location.reload(); // Чистая перезагрузка
+            localStorage.removeItem('dc_v4'); 
+            window.location.reload(); 
         }
     }
 
@@ -202,7 +200,6 @@
         if(coins >= it.c) { beep(600, 0.1); coins -= it.c; it.f(); it.c = Math.floor(it.c*1.8); updateUI(); renderShop(); }
     }
 
-    // КЛИКЕР + АРТЕФАКТЫ
     function doTap(e) {
         beep(400, 0.05); 
         let gain = pwr * mult;
@@ -242,27 +239,120 @@
         if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) { beep(100, 0.2); initSnake(); } else sn.unshift(h);
     }
 
-    // ДЖАМПЕР
+    // ДЖАМПЕР ПРОКАЧЕННЫЙ С МЕТРАМИ И ФОНАМИ
     const jC = document.getElementById('jumperCanvas'), jX = jC.getContext('2d');
     let jp, jPlats;
+    
+    // Переменные для счетчика и фонов
+    let jDist = 0, jMeters = 0, lastMs = 0;
+    // 10 ретро-пастельных цветов, на которых хорошо видно #0f380f
+    const bgList = ['#8bac0f', '#9bf6ff', '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#bdb2ff', '#ffc6ff', '#e4f1ee', '#ffc0cb'];
+    let jBg = bgList[0];
+
+    function getNewPlat(y) {
+        let rnd = Math.random();
+        let type = 0; // 0 = normal, 1 = spring, 2 = fragile
+        if (rnd > 0.85) type = 1;
+        else if (rnd > 0.65) type = 2;
+        let w = 40 + Math.random() * 15;
+        let vx = Math.random() > 0.7 ? (Math.random() > 0.5 ? 1.5 : -1.5) : 0;
+        return { x: Math.random() * (200 - w), y: y, w: w, vx: vx, type: type, broken: false };
+    }
+
     function initJumper() { 
-        jp = {x:90, y:150, vy:0}; jPlats = []; 
-        for(let i=0; i<6; i++) jPlats.push({x:Math.random()*150, y:i*45, w:45, vx: Math.random()>0.8?1:0});
+        jp = {x:90, y:150, vy:0, frame:0}; jPlats = []; 
+        jDist = 0; jMeters = 0; lastMs = 0; jBg = bgList[0]; // Сброс метров и фона
+        for(let i=0; i<6; i++) jPlats.push(getNewPlat(i * 45));
         clearInterval(gameLoop); gameLoop = setInterval(drawJumper, 30);
     }
+
     function drawJumper() {
-        jX.fillStyle = '#8bac0f'; jX.fillRect(0,0,200,250);
-        jp.vy += jG; jp.y += jp.vy; jp.x += jDir * 4;
+        // Отрисовка фона текущего биома
+        jX.fillStyle = jBg; jX.fillRect(0,0,200,250);
+        
+        jp.vy += jG; jp.y += jp.vy; jp.x += jDir * 4; jp.frame++;
         jX.fillStyle = '#0f380f';
+        
         jPlats.forEach(p => {
-            p.x += p.vx; if(p.x<0||p.x>155) p.vx*=-1;
-            jX.fillRect(p.x, p.y, p.w, 7);
-            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) { beep(500, 0.05); jp.vy = jJ; coins += 2 * mult; updateUI(); }
+            if(p.broken) return; 
+            
+            p.x += p.vx; 
+            if(p.x < 0 || p.x > (200 - p.w)) p.vx *= -1; 
+            
+            if (p.type === 1) { 
+                jX.fillRect(p.x, p.y + 4, p.w, 3);
+                jX.fillRect(p.x + 5, p.y, 5, 4);
+                jX.fillRect(p.x + p.w - 10, p.y, 5, 4);
+            } else if (p.type === 2) { 
+                for(let i=0; i<p.w; i+=8) jX.fillRect(p.x + i, p.y, 5, 7);
+            } else { 
+                jX.fillRect(p.x, p.y, p.w, 7);
+            }
+
+            if(jp.vy > 0 && jp.x + 15 > p.x && jp.x < p.x + p.w && jp.y + 15 > p.y && jp.y + 15 < p.y + 10) { 
+                if (p.type === 1) { 
+                    jp.vy = jJ * 1.4; 
+                    coins += 5 * mult; 
+                    beep(700, 0.1); 
+                } else if (p.type === 2) { 
+                    jp.vy = jJ; 
+                    coins += 2 * mult; 
+                    p.broken = true; 
+                    beep(300, 0.05); 
+                } else { 
+                    jp.vy = jJ; 
+                    coins += 2 * mult; 
+                    beep(500, 0.05); 
+                }
+                updateUI(); 
+            }
         });
-        if(jp.y < 80) { let d = 80 - jp.y; jp.y = 80; jPlats.forEach(p => { p.y += d; if(p.y > 250) { p.y = 0; p.x = Math.random()*150; }}); }
-        jX.fillRect(jp.x, jp.y, 15, 15);
+
+        // Движение экрана вверх и подсчет дистанции
+        if(jp.y < 80) { 
+            let d = 80 - jp.y; 
+            jp.y = 80; 
+            jDist += d; // Копим пройденные пиксели
+            
+            jPlats.forEach(p => { 
+                p.y += d; 
+                if(p.y > 250) { Object.assign(p, getNewPlat(0)); }
+            }); 
+        }
+
+        // Проверка достижения новых метров и смена фона
+        jMeters = Math.floor(jDist / 10);
+        let curMs = Math.floor(jMeters / 200);
+        if(curMs > lastMs) {
+            lastMs = curMs;
+            jBg = bgList[Math.floor(Math.random() * bgList.length)];
+            beep(900, 0.3); // Победный звук смены биома
+        }
+
+        // Отрисовка текста метров
+        jX.fillStyle = '#0f380f';
+        jX.font = "8px 'Press Start 2P'";
+        jX.fillText(jMeters + "M", 5, 15);
+
+        // Отрисовка игрока (мини-робот)
+        jX.fillStyle = '#0f380f';
+        jX.fillRect(jp.x + 3, jp.y, 9, 5);
+        jX.fillRect(jp.x, jp.y + 5, 15, 8);
+        jX.fillStyle = jBg; // Визор сливается с фоном для стиля
+        jX.fillRect(jp.x + 4, jp.y + 7, 7, 3); 
+        jX.fillStyle = '#0f380f';
+        
+        if(jp.vy < 0) {
+            if(jp.frame % 4 < 2) jX.fillRect(jp.x + 4, jp.y + 13, 7, 5);
+            else { jX.fillRect(jp.x + 2, jp.y + 13, 3, 4); jX.fillRect(jp.x + 10, jp.y + 13, 3, 4); }
+        } else {
+            jX.fillRect(jp.x + 2, jp.y + 13, 3, 3); jX.fillRect(jp.x + 10, jp.y + 13, 3, 3);
+        }
+
         if(jp.y > 260) { beep(100, 0.2); initJumper(); }
-        if(jp.x < 0) jp.x = 200; if(jp.x > 200) jp.x = 0;
+        
+        if(jp.x < -15) jp.x = 200; 
+        if(jp.x > 200) jp.x = -15; 
     }
 
     setInterval(() => { if(auto > 0) { coins += (auto/10) * mult; updateUI(); }}, 100);
