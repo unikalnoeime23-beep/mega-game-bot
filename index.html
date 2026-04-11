@@ -13,34 +13,29 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         .header {
-            margin-top: 50px;
-            margin-bottom: 30px;
+            margin-top: 40px;
+            margin-bottom: 20px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 34px;
+            font-size: 32px;
             margin: 0;
             background: linear-gradient(90deg, #00d2ff, #ff00cc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 900;
-            letter-spacing: 1px;
         }
 
         .balance {
-            font-size: 26px;
-            margin-top: 10px;
+            font-size: 24px;
+            margin: 10px 0;
             font-weight: bold;
             color: #ffcc00;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
         }
 
         .game-list {
@@ -54,8 +49,8 @@
         .game-card {
             background: #161b22;
             border: 1px solid #30363d;
-            border-radius: 24px;
-            padding: 16px 20px;
+            border-radius: 20px;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -64,12 +59,11 @@
         .game-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .game-icon {
-            font-size: 22px;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
+            font-size: 24px;
         }
 
         .game-titles {
@@ -79,46 +73,40 @@
 
         .game-name {
             font-weight: bold;
-            font-size: 19px;
-            letter-spacing: 0.5px;
+            font-size: 18px;
         }
 
         .game-subtitle {
-            font-size: 13px;
+            font-size: 12px;
             color: #8b949e;
         }
 
         .play-button {
-            background: #00d2ff;
+            background: #00a2ff;
             color: black;
             border: none;
-            border-radius: 18px;
-            padding: 12px 30px;
-            font-weight: 900;
+            border-radius: 15px;
+            padding: 10px 25px;
+            font-weight: bold;
             font-size: 14px;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.3);
             cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .play-button:active {
-            transform: scale(0.95);
-            background: #00b8e6;
         }
 
         .market-button {
             background: #ffaa00;
             color: black;
             border: none;
-            border-radius: 18px;
-            width: 100%;
-            padding: 20px;
-            font-weight: 900;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            padding: 18px;
+            font-weight: bold;
             font-size: 16px;
             margin-top: 20px;
             text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
-            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -138,18 +126,7 @@
                     <span class="game-subtitle">Neon Arcade</span>
                 </div>
             </div>
-            <button class="play-button" onclick="location.href='index_game.html'">PLAY</button>
-        </div>
-
-        <div class="game-card">
-            <div class="game-info">
-                <span class="game-icon">🚀</span>
-                <div class="game-titles">
-                    <span class="game-name">JUMP</span>
-                    <span class="game-subtitle">Gravity Test</span>
-                </div>
-            </div>
-            <button class="play-button" onclick="location.href='jumper.html'">PLAY</button>
+            <button class="play-button" onclick="window.location.href='https://unikalnoeime23-beep.github.io/mega-game-bot/snake.html'">PLAY</button>
         </div>
 
         <div class="game-card">
@@ -160,11 +137,22 @@
                     <span class="game-subtitle">Classic Block</span>
                 </div>
             </div>
-            <button class="play-button" onclick="location.href='tetris.html'">PLAY</button>
+            <button class="play-button" onclick="window.location.href='https://unikalnoeime23-beep.github.io/mega-game-bot/tetris.html'">PLAY</button>
         </div>
 
-        <button class="market-button" onclick="alert('Market coming soon!')">Market & Custom</button>
+        <div class="game-card">
+            <div class="game-info">
+                <span class="game-icon">🚀</span>
+                <div class="game-titles">
+                    <span class="game-name">JUMP</span>
+                    <span class="game-subtitle">Gravity Test</span>
+                </div>
+            </div>
+            <button class="play-button" onclick="window.location.href='https://unikalnoeime23-beep.github.io/mega-game-bot/jumper.html'">PLAY</button>
+        </div>
     </div>
+
+    <button class="market-button">Market & Custom</button>
 
 </body>
 </html>
