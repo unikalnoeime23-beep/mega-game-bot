@@ -3,145 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila Hub V2</title>
+    <title>DANILA HUB 90s</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --retro-green: #9bbc0f; 
-            --retro-dark: #0f380f; 
-            --retro-mid: #8bac0f;
-            --retro-light: #cadc9f;
+            --bg-pixel: #8bac0f; 
+            --dark-pixel: #0f380f; 
+            --mid-pixel: #306230;
+            --light-pixel: #9bbc0f;
         }
         
         body { 
             font-family: 'Press Start 2P', cursive; 
-            background: #1a1a1a; color: var(--retro-dark); 
-            margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
+            background: #111; color: var(--dark-pixel); 
+            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
         }
 
-        /* Консольная рамка */
-        .console-frame {
+        /* Экран GameBoy */
+        .screen-border {
             flex: 1; display: flex; flex-direction: column;
-            border: 10px solid #333; border-radius: 20px;
-            background: var(--retro-mid); margin: 5px; box-shadow: inset 0 0 50px rgba(0,0,0,0.2);
+            border: 15px solid #444; border-radius: 10px;
+            background: var(--bg-pixel); margin: 10px; position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
         }
 
-        .header { 
-            padding: 15px; text-align: center; border-bottom: 4px solid var(--retro-dark);
-            background: var(--retro-green);
+        .top-info { 
+            padding: 10px; border-bottom: 3px solid var(--dark-pixel); 
+            display: flex; justify-content: space-between; font-size: 10px;
         }
-        .balance { font-size: 14px; text-shadow: 1px 1px var(--retro-light); }
 
-        .nav-bar { display: flex; background: #222; }
+        .nav { display: flex; background: #222; border-bottom: 2px solid #000; }
         .nav-btn { 
-            flex: 1; padding: 12px 0; background: #333; border: none; color: #666; 
+            flex: 1; padding: 12px 0; background: #333; border: none; color: #777; 
             font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;
         }
-        .nav-btn.active { background: var(--retro-green); color: var(--retro-dark); }
+        .nav-btn.active { background: var(--bg-pixel); color: var(--dark-pixel); }
 
-        .page { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; overflow-y: auto; }
+        .content { flex: 1; position: relative; width: 100%; }
+        .page { 
+            display: none; position: absolute; width: 100%; height: 100%; 
+            flex-direction: column; align-items: center; justify-content: center; 
+        }
         .page.active { display: flex; }
 
-        /* Игровое меню */
-        .game-menu { width: 90%; margin-top: 20px; }
-        .game-card { 
-            background: var(--retro-green); border: 4px solid var(--retro-dark); 
-            padding: 15px; margin-bottom: 10px; box-shadow: 4px 4px 0 var(--retro-dark);
+        /* Меню */
+        .menu-list { width: 90%; }
+        .menu-item { 
+            background: rgba(0,0,0,0.05); border: 2px solid var(--dark-pixel); 
+            padding: 12px; margin-bottom: 10px; text-align: center;
         }
-        .play-btn { 
-            width: 100%; background: var(--retro-dark); color: var(--retro-green); 
-            border: none; padding: 10px; font-family: 'Press Start 2P'; font-size: 10px; margin-top: 10px;
+        .btn-play { 
+            background: var(--dark-pixel); color: var(--bg-pixel); 
+            border: none; padding: 8px; font-family: 'Press Start 2P'; font-size: 10px; width: 100%;
         }
 
         /* Кликер */
-        #clicker-btn {
-            width: 160px; height: 160px; background: var(--retro-dark); 
-            margin-top: 40px; border: 8px double var(--retro-green);
-            display: flex; align-items: center; justify-content: center;
-            color: var(--retro-light); font-size: 14px; text-align: center;
-            box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+        #tap-zone {
+            width: 140px; height: 140px; background: var(--dark-pixel);
+            border: 6px double var(--bg-pixel); display: flex; align-items: center;
+            justify-content: center; color: var(--bg-pixel); font-size: 12px;
         }
-        #clicker-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0; }
 
-        /* Игровые холсты */
+        /* Игры */
         canvas { 
-            background: var(--retro-green); border: 4px solid var(--retro-dark); 
-            margin-top: 10px; image-rendering: pixelated; 
+            background: var(--light-pixel); border: 3px solid var(--dark-pixel); 
+            display: block; image-rendering: pixelated;
         }
 
-        /* УПРАВЛЕНИЕ ДЛЯ ВСЕХ ИГР */
-        .joypad { 
-            display: grid; grid-template-columns: repeat(3, 60px); 
-            gap: 10px; margin: 20px 0; 
+        /* Кнопки Joypad */
+        .joypad { display: grid; grid-template-columns: repeat(3, 55px); gap: 8px; margin-top: 10px; }
+        .btn-joy { 
+            background: var(--dark-pixel); color: var(--bg-pixel); border: none; 
+            width: 55px; height: 50px; font-size: 18px; border-radius: 5px; 
         }
-        .joy-btn { 
-            background: var(--retro-dark); color: var(--retro-green); 
-            border: none; padding: 15px; font-size: 20px; border-radius: 10px;
-            box-shadow: 0 4px #000; touch-action: manipulation;
-        }
-        .joy-btn:active { transform: translateY(3px); box-shadow: 0 1px #000; }
 
         /* Магазин */
-        .shop-item { 
-            width: 90%; border: 2px solid var(--retro-dark); margin-bottom: 8px; 
-            padding: 10px; background: var(--retro-green); display: flex; justify-content: space-between; align-items: center;
+        .shop-row { 
+            width: 90%; border-bottom: 1px solid var(--dark-pixel); 
+            padding: 8px 0; display: flex; justify-content: space-between; align-items: center;
         }
 
-        .pop { position: absolute; font-size: 12px; pointer-events: none; animation: popUp 0.6s forwards; }
-        @keyframes popUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
+        .pop { position: absolute; font-size: 12px; pointer-events: none; animation: popUp 0.5s forwards; }
+        @keyframes popUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="console-frame">
-    <div class="header">
-        <div class="balance">COINS: <span id="total-coins">0</span></div>
-        <div id="status-text" style="font-size: 8px; margin-top: 5px; color: #405010;">SYSTEM READY...</div>
+<div class="screen-border">
+    <div class="top-info">
+        <span>DC: <span id="coins">0</span></span>
+        <span id="game-title">MENU</span>
     </div>
 
-    <div class="nav-bar">
-        <button class="nav-btn active" id="btn-games" onclick="showPage('games', this)">GAMES</button>
-        <button class="nav-btn" id="btn-shop" onclick="showPage('shop', this)">SHOP</button>
+    <div class="nav">
+        <button class="nav-btn active" id="n-games" onclick="goTo('games')">GAMES</button>
+        <button class="nav-btn" id="n-shop" onclick="goTo('shop')">SHOP</button>
         <button class="nav-btn" onclick="tg.close()">OFF</button>
     </div>
 
-    <div id="games-page" class="page active">
-        <div class="game-menu">
-            <div class="game-card"><h3>TAP MASTER</h3><button class="play-btn" onclick="openGame('clicker')">SELECT</button></div>
-            <div class="game-card"><h3>SNAKE 8BIT</h3><button class="play-btn" onclick="openGame('snake')">SELECT</button></div>
-            <div class="game-card"><h3>NEON JUMP</h3><button class="play-btn" onclick="openGame('jumper')">SELECT</button></div>
+    <div class="content">
+        <div id="p-games" class="page active">
+            <div class="menu-list">
+                <div class="menu-item">
+                    <div style="font-size: 10px; margin-bottom: 5px;">PIXEL TAP</div>
+                    <button class="btn-play" onclick="start('clicker')">SELECT</button>
+                </div>
+                <div class="menu-item">
+                    <div style="font-size: 10px; margin-bottom: 5px;">SNAKE 90s</div>
+                    <button class="btn-play" onclick="start('snake')">SELECT</button>
+                </div>
+                <div class="menu-item">
+                    <div style="font-size: 10px; margin-bottom: 5px;">SKY JUMP</div>
+                    <button class="btn-play" onclick="start('jumper')">SELECT</button>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div id="clicker-game" class="page">
-        <div id="clicker-btn">TAP!</div>
-        <div id="combo-ui" style="margin-top: 20px; font-size: 10px;">COMBO: X1</div>
-    </div>
-
-    <div id="snake-game" class="page">
-        <div id="s-score" style="margin-top:10px; font-size: 10px;">SCORE: 0</div>
-        <canvas id="snakeCanvas" width="220" height="220"></canvas>
-        <div class="joypad">
-            <button class="joy-btn" style="grid-column: 2" onmousedown="snDir='up'">↑</button>
-            <button class="joy-btn" style="grid-row: 2; grid-column: 1" onmousedown="snDir='left'">←</button>
-            <button class="joy-btn" style="grid-row: 2; grid-column: 2" onmousedown="snDir='down'">↓</button>
-            <button class="joy-btn" style="grid-row: 2; grid-column: 3" onmousedown="snDir='right'">→</button>
+        <div id="p-clicker" class="page">
+            <div id="tap-zone" onpointerdown="doClick(event)">TAP!</div>
+            <div id="combo" style="margin-top: 15px; font-size: 8px;">COMBO: X1</div>
         </div>
-    </div>
 
-    <div id="jumper-game" class="page">
-        <div id="j-score" style="margin-top:10px; font-size: 10px;">SCORE: 0</div>
-        <canvas id="jumperCanvas" width="240" height="320"></canvas>
-        <div class="joypad" style="grid-template-columns: 1fr 1fr; width: 240px;">
-            <button class="joy-btn" onmousedown="moveJumper(-1)" onmouseup="moveJumper(0)" ontouchstart="moveJumper(-1)" ontouchend="moveJumper(0)">LEFT</button>
-            <button class="joy-btn" onmousedown="moveJumper(1)" onmouseup="moveJumper(0)" ontouchstart="moveJumper(1)" ontouchend="moveJumper(0)">RIGHT</button>
+        <div id="p-snake" class="page">
+            <canvas id="snakeCanvas" width="200" height="200"></canvas>
+            <div class="joypad">
+                <button class="btn-joy" style="grid-column: 2" onclick="snDir='up'">↑</button>
+                <button class="btn-joy" style="grid-row: 2; grid-column: 1" onclick="snDir='left'">←</button>
+                <button class="btn-joy" style="grid-row: 2; grid-column: 2" onclick="snDir='down'">↓</button>
+                <button class="btn-joy" style="grid-row: 2; grid-column: 3" onclick="snDir='right'">→</button>
+            </div>
         </div>
-    </div>
 
-    <div id="shop-page" class="page">
-        <div id="shop-title" style="margin: 20px 0; font-size: 10px;">SELECT GAME FIRST</div>
-        <div id="shop-content" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+        <div id="p-jumper" class="page">
+            <canvas id="jumperCanvas" width="220" height="280"></canvas>
+            <div class="joypad" style="grid-template-columns: 1fr 1fr; width: 200px;">
+                <button class="btn-joy" style="width: 90px;" ontouchstart="jInp=-1" ontouchend="jInp=0">LEFT</button>
+                <button class="btn-joy" style="width: 90px;" ontouchstart="jInp=1" ontouchend="jInp=0">RIGHT</button>
+            </div>
+        </div>
+
+        <div id="p-shop" class="page" style="justify-content: flex-start; padding-top: 10px; overflow-y: auto;">
+            <div id="shop-items" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+        </div>
     </div>
 </div>
 
@@ -150,134 +154,122 @@
     tg.expand();
 
     let coins = parseFloat(localStorage.getItem('d_coins')) || 0;
-    let clickPwr = 1, clickAuto = 0, snMult = 1, snSpeed = 130, jJump = -11, jGrav = 0.5;
-    let activeMode = 'menu';
+    let clickPwr = 1, auto = 0, snMult = 1, snSpd = 130, jJmp = -11, jGrv = 0.5;
+    let active = 'games';
 
-    const shopData = {
-        clicker: [{n:"SUPER FINGER", c:100, f:()=>clickPwr++}, {n:"AUTO BOT", c:500, f:()=>clickAuto+=2}],
-        snake: [{n:"FRUIT X2", c:200, f:()=>snMult+=1}, {n:"SLOW CHIP", c:600, f:()=>snSpeed+=20}],
-        jumper: [{n:"BOOTS", c:300, f:()=>jJump-=1}, {n:"MOON", c:800, f:()=>jGrav-=0.05}]
+    const shop = {
+        clicker: [{n:"FINGER+", c:100, f:()=>clickPwr++}, {n:"AUTO-BOT", c:500, f:()=>auto+=2}],
+        snake: [{n:"APPLE X2", c:200, f:()=>snMult++}, {n:"SLOWER", c:400, f:()=>snSpd+=20}],
+        jumper: [{n:"BOOTS+", c:300, f:()=>jJmp--}, {n:"GRAV-", c:600, f:()=>jGrv-=0.05}]
     };
 
-    function showPage(id, btn) {
+    function goTo(id) {
         stopAll();
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id + '-page').classList.add('active');
-        if(btn) { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('p-' + id).classList.add('active');
+        document.getElementById('n-' + id)?.classList.add('active');
+        active = id;
+        document.getElementById('game-title').innerText = id.toUpperCase();
         if(id === 'shop') renderShop();
     }
 
-    function openGame(mode) {
-        activeMode = mode;
-        showPage(mode);
-        if(mode === 'snake') startSnake();
-        if(mode === 'jumper') startJumper();
+    function start(game) {
+        goTo(game);
+        if(game === 'snake') initSnake();
+        if(game === 'jumper') initJumper();
     }
 
     function renderShop() {
-        const cont = document.getElementById('shop-content');
-        cont.innerHTML = '';
-        if(!shopData[activeMode]) return;
-        shopData[activeMode].forEach((item, i) => {
-            const d = document.createElement('div');
-            d.className = 'shop-item';
-            d.innerHTML = `<div style="font-size:7px"><b>${item.n}</b><br>COST: ${item.c}</div>
-                           <button class="joy-btn" style="padding:5px 10px; font-size:8px" onclick="buy(${i})">BUY</button>`;
-            cont.appendChild(d);
+        const c = document.getElementById('shop-items');
+        c.innerHTML = '';
+        let m = active === 'shop' ? 'clicker' : active; // По умолчанию магазин кликера
+        if(!shop[m]) m = 'clicker';
+        shop[m].forEach((it, i) => {
+            const r = document.createElement('div');
+            r.className = 'shop-row';
+            r.innerHTML = `<div style="font-size:7px"><b>${it.n}</b><br>C: ${it.c}</div>
+                           <button class="btn-joy" style="width:60px; height:35px; font-size:8px" onclick="buy('${m}',${i})">BUY</button>`;
+            c.appendChild(r);
         });
     }
 
-    function buy(i) {
-        let item = shopData[activeMode][i];
-        if(coins >= item.c) { coins -= item.c; item.f(); item.c = Math.floor(item.c * 1.7); updateUI(); renderShop(); }
+    function buy(m, i) {
+        let it = shop[m][i];
+        if(coins >= it.c) { coins -= it.c; it.f(); it.c = Math.floor(it.c*1.6); updateUI(); renderShop(); }
     }
 
-    function updateUI() { 
-        document.getElementById('total-coins').innerText = Math.floor(coins).toLocaleString(); 
+    function updateUI() {
+        document.getElementById('coins').innerText = Math.floor(coins);
         localStorage.setItem('d_coins', coins);
     }
 
-    // --- CLICKER ---
-    let combo = 0, comboT;
-    document.getElementById('clicker-btn').onpointerdown = (e) => {
-        combo++; clearTimeout(comboT);
-        comboT = setTimeout(()=>combo=0, 800);
-        let m = combo > 20 ? 3 : (combo > 10 ? 2 : 1);
+    // CLICKER
+    let comb = 0, combT;
+    function doClick(e) {
+        comb++; clearTimeout(combT); combT = setTimeout(()=>comb=0, 800);
+        let m = comb > 20 ? 3 : (comb > 10 ? 2 : 1);
         coins += clickPwr * m;
-        document.getElementById('combo-ui').innerText = "COMBO: X" + m;
+        document.getElementById('combo').innerText = "COMBO: X" + m;
         updateUI();
-        pop(e.clientX, e.clientY, "+"+(clickPwr*m));
-    };
-
-    // --- SNAKE ---
-    const snCanvas = document.getElementById('snakeCanvas');
-    const snCtx = snCanvas.getContext('2d');
-    let snake, snFood, snDir, snInt, snScore;
-    function startSnake() {
-        snake = [{x:10, y:10}]; snFood = {x:5, y:5}; snDir = 'right'; snScore = 0;
-        clearInterval(snInt);
-        snInt = setInterval(drawSnake, snSpeed);
-    }
-    function drawSnake() {
-        snCtx.fillStyle = 'var(--retro-green)'; snCtx.fillRect(0,0,220,220);
-        snCtx.fillStyle = 'var(--retro-dark)';
-        snake.forEach(b => snCtx.fillRect(b.x*11, b.y*11, 10, 10));
-        snCtx.strokeRect(snFood.x*11, snFood.y*11, 10, 10);
-        
-        let head = {...snake[0]};
-        if(snDir=='up') head.y--; if(snDir=='down') head.y++;
-        if(snDir=='left') head.x--; if(snDir=='right') head.x++;
-
-        if(head.x==snFood.x && head.y==snFood.y) {
-            coins += 10 * snMult; snScore++; updateUI();
-            document.getElementById('s-score').innerText = "SCORE: " + snScore;
-            snFood = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
-        } else { snake.pop(); }
-
-        if(head.x<0||head.x>=20||head.y<0||head.y>=20||snake.some(s=>s.x==head.x&&s.y==head.y)) startSnake();
-        else snake.unshift(head);
+        let p = document.createElement('div'); p.className='pop'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+(clickPwr*m);
+        document.body.appendChild(p); setTimeout(()=>p.remove(), 500);
     }
 
-    // --- JUMPER ---
-    const jCanvas = document.getElementById('jumperCanvas');
-    const jCtx = jCanvas.getContext('2d');
-    let jActive, jPlayer, jPlats, jInp = 0;
-    function startJumper() {
-        jActive = true; jPlayer = {x:110, y:250, vy:0}; jPlats = [];
-        for(let i=0; i<6; i++) jPlats.push({x:Math.random()*180, y:i*60, w:50, vx: Math.random()>0.7?1:0});
-        requestAnimationFrame(drawJumper);
+    // SNAKE
+    const sCn = document.getElementById('snakeCanvas'), sCtx = sCn.getContext('2d');
+    let sn, sF, snDir, sI;
+    function initSnake() {
+        sn = [{x:10, y:10}]; sF = {x:5, y:5}; snDir = 'right';
+        clearInterval(sI); sI = setInterval(drawSn, snSpd);
     }
-    function moveJumper(v) { jInp = v; }
-    function drawJumper() {
-        if(!jActive || activeMode !== 'jumper') return;
-        jCtx.fillStyle = 'var(--retro-green)'; jCtx.fillRect(0,0,240,320);
-        jPlayer.vy += jGrav; jPlayer.y += jPlayer.vy;
-        jPlayer.x += jInp * 4;
+    function drawSn() {
+        sCtx.fillStyle = 'var(--bg-pixel)'; sCtx.fillRect(0,0,200,200);
+        sCtx.fillStyle = 'var(--dark-pixel)';
+        sn.forEach(b => sCtx.fillRect(b.x*10, b.y*10, 9, 9));
+        sCtx.strokeRect(sF.x*10, sF.y*10, 9, 9);
+        let h = {...sn[0]};
+        if(snDir=='up') h.y--; if(snDir=='down') h.y++; if(snDir=='left') h.x--; if(snDir=='right') h.x++;
+        if(h.x==sF.x && h.y==sF.y) {
+            coins += 10 * snMult; updateUI();
+            sF = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
+        } else sn.pop();
+        if(h.x<0||h.x>=20||h.y<0||h.y>=20||sn.some(s=>s.x==h.x&&s.y==h.y)) initSnake();
+        else sn.unshift(h);
+    }
 
-        jPlats.forEach(p => {
-            p.x += p.vx; if(p.x<0||p.x>190) p.vx*=-1;
-            jCtx.fillStyle = 'var(--retro-dark)'; jCtx.fillRect(p.x, p.y, p.w, 8);
-            if(jPlayer.vy > 0 && jPlayer.x+15 > p.x && jPlayer.x < p.x+p.w && jPlayer.y+15 > p.y && jPlayer.y+15 < p.y+10) {
-                jPlayer.vy = jJump; coins += 2; updateUI();
+    // JUMPER
+    const jCn = document.getElementById('jumperCanvas'), jCtx = jCn.getContext('2d');
+    let jA, jP, jPl, jInp = 0;
+    function initJumper() {
+        jA = true; jP = {x:100, y:200, vy:0}; jPl = [];
+        for(let i=0; i<6; i++) jPl.push({x:Math.random()*170, y:i*50, w:45, vx:Math.random()>0.8?1:0});
+        requestAnimationFrame(drawJp);
+    }
+    function drawJp() {
+        if(!jA || active !== 'jumper') return;
+        jCtx.fillStyle = 'var(--bg-pixel)'; jCtx.fillRect(0,0,220,280);
+        jP.vy += jGrv; jP.y += jP.vy; jP.x += jInp * 4;
+        jCtx.fillStyle = 'var(--dark-pixel)';
+        jPl.forEach(p => {
+            p.x += p.vx; if(p.x<0||p.x>175) p.vx *= -1;
+            jCtx.fillRect(p.x, p.y, p.w, 8);
+            if(jP.vy > 0 && jP.x+15 > p.x && jP.x < p.x+p.w && jP.y+15 > p.y && jP.y+15 < p.y+10) {
+                jP.vy = jJmp; coins += 2; updateUI();
             }
         });
-
-        if(jPlayer.y < 120) {
-            let d = 120 - jPlayer.y; jPlayer.y = 120;
-            jPlats.forEach(p => { p.y += d; if(p.y > 320) { p.y = 0; p.x = Math.random()*180; p.vx = Math.random()>0.8?1.5:0; }});
+        if(jP.y < 100) {
+            let d = 100 - jP.y; jP.y = 100;
+            jPl.forEach(p => { p.y += d; if(p.y > 280) { p.y = 0; p.x = Math.random()*170; }});
         }
-        jCtx.fillRect(jPlayer.x, jPlayer.y, 15, 15);
-        if(jPlayer.y > 350) startJumper();
-        requestAnimationFrame(drawJumper);
+        jCtx.fillRect(jP.x, jP.y, 15, 15);
+        if(jP.y > 300) initJumper();
+        if(jP.x < 0) jP.x = 220; if(jP.x > 220) jP.x = 0;
+        requestAnimationFrame(drawJp);
     }
 
-    function stopAll() { clearInterval(snInt); jActive = false; }
-    function pop(x,y,v) {
-        let p = document.createElement('div'); p.className = 'pop'; p.style.left = x+'px'; p.style.top = y+'px'; p.innerText = v;
-        document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
-    }
-    
-    setInterval(() => { if(clickAuto > 0) { coins += clickAuto/10; updateUI(); }}, 100);
+    function stopAll() { clearInterval(sI); jA = false; }
+    setInterval(() => { if(auto > 0) { coins += auto/10; updateUI(); }}, 100);
     updateUI();
 </script>
 </body>
