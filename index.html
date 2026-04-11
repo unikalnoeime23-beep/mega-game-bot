@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila Clicker</title>
+    <title>Danila-Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #0a0a0a;
-            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -20,121 +20,112 @@
             user-select: none;
         }
 
-        /* Шапка с балансом */
-        .stats { position: absolute; top: 30px; text-align: center; width: 100%; }
-        .balance { font-size: 42px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 15px rgba(241, 196, 15, 0.5); }
-        .prestige-rank { font-size: 18px; color: #aaa; margin-top: 5px; }
+        .header { position: absolute; top: 20px; text-align: center; }
+        .balance-text { font-size: 32px; font-weight: bold; color: #f39c12; margin-bottom: 5px; }
+        .prestige-info { font-size: 18px; color: #bdc3c7; }
 
-        /* Круглая кнопка */
+        /* Круглая кнопка кликера */
         #click-button {
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, #ff4d4d 0%, #990000 100%);
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            font-weight: bold;
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.3), inset 0 0 20px rgba(0,0,0,0.5);
-            cursor: pointer;
-            transition: transform 0.05s;
-            border: 10px solid #222;
-        }
-        #click-button:active { transform: scale(0.92); }
-
-        /* Всплывающие цифры */
-        .floating-text {
-            position: absolute;
-            color: #f1c40f;
             font-size: 28px;
             font-weight: bold;
-            pointer-events: none;
-            animation: moveUp 1s linear forwards;
-        }
-        @keyframes moveUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-150px); opacity: 0; }
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4);
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            border: 8px solid #962d22;
         }
 
-        /* Магазин */
-        .shop { position: absolute; bottom: 40px; width: 90%; max-width: 400px; }
-        .upgrade-card {
-            background: #1a1a1a;
+        #click-button:active { transform: scale(0.95); }
+
+        /* Всплывающие цифры */
+        .pop-up {
+            position: absolute;
+            color: #f1c40f;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-120px); opacity: 0; }
+        }
+
+        .shop-container { margin-top: 40px; width: 80%; }
+        .shop-item {
+            background: #1e1e1e;
             padding: 15px;
-            border-radius: 15px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
             border: 1px solid #333;
         }
+
         button {
             background: #27ae60;
             border: none;
             color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 8px 15px;
+            border-radius: 6px;
             font-weight: bold;
         }
-        button:disabled { background: #444; color: #777; }
 
-        /* Кнопка престижа */
-        #prestige-btn {
-            margin-top: 15px;
-            background: #8e44ad;
-            display: none; /* Появится при 1 млрд */
-        }
+        button:disabled { background: #555; color: #888; }
     </style>
 </head>
 <body>
 
-    <div class="stats">
-        <div class="balance"><span id="balance">0</span> DC</div>
-        <div class="prestige-rank">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
+    <div class="header">
+        <div class="balance-text"><span id="balance">0</span> DC</div>
+        <div class="prestige-info">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
     </div>
 
     <div id="click-button">CLICK</div>
 
-    <div class="shop">
-        <div class="upgrade-card">
+    <div class="shop-container">
+        <div class="shop-item">
             <div>
-                <strong>AFK БОТ (Ур. <span id="afk-lvl">0</span>)</strong><br>
-                <small id="afk-cost">Нужно 500 DC</small>
+                <strong>AFK-Бот</strong><br>
+                <small id="afk-desc">Нужно 500 DC</small>
             </div>
-            <button id="buy-afk-btn" onclick="buyAfk()">КУПИТЬ</button>
+            <button id="buy-afk" onclick="buyAfk()" disabled>Купить</button>
         </div>
-        
-        <button id="prestige-btn" style="width: 100%" onclick="doPrestige()">СБРОСИТЬ (ПРЕСТИЖ +1)</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Данные игры
-        let balance = parseFloat(localStorage.getItem('dc_bal')) || 0;
-        let prestige = parseInt(localStorage.getItem('dc_pre')) || 0;
-        let afkLevel = parseInt(localStorage.getItem('dc_afk')) || 0;
-
+        let balance = 0;
+        let prestige = 0;
+        let afkLevel = 0;
+        let clickPower = 1;
         const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
-        const AFK_BASE_COST = 500;
-        const PRESTIGE_GOAL = 1000000000; // 1 миллиард
 
         const btn = document.getElementById('click-button');
-
-        // Клик
+        
         btn.addEventListener('pointerdown', (e) => {
-            let power = (1 + prestige * 0.2); // x1.2 за каждый престиж
-            balance += power;
-            showPopUp(e.clientX, e.clientY, power);
+            let multiplier = Math.pow(1.2, prestige);
+            let currentGain = clickPower * multiplier;
+            balance += currentGain;
+            
+            showPopUp(e.clientX, e.clientY, currentGain);
             updateUI();
+            checkPrestige();
         });
 
         function showPopUp(x, y, val) {
             const pop = document.createElement('div');
-            pop.className = 'floating-text';
-            pop.style.left = x + 'px';
-            pop.style.top = y + 'px';
+            pop.className = 'pop-up';
+            pop.style.left = (x - 20) + 'px';
+            pop.style.top = (y - 20) + 'px';
             pop.innerText = '+' + val.toFixed(1);
             document.body.appendChild(pop);
             setTimeout(() => pop.remove(), 1000);
@@ -142,58 +133,45 @@
 
         function updateUI() {
             document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
-            document.getElementById('afk-lvl').innerText = afkLevel;
             document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
-            document.getElementById('mult').innerText = (1 + prestige * 0.2).toFixed(1);
-
-            // Логика покупки AFK
-            let nextAfkCost = AFK_BASE_COST * (afkLevel + 1);
-            let afkBtn = document.getElementById('buy-afk-btn');
-            document.getElementById('afk-cost').innerText = `Цена: ${nextAfkCost} DC`;
-            afkBtn.disabled = balance < nextAfkCost;
-
-            // Кнопка престижа
-            let pBtn = document.getElementById('prestige-btn');
-            if (balance >= PRESTIGE_GOAL && prestige < 10) {
-                pBtn.style.display = "block";
-            } else {
-                pBtn.style.display = "none";
+            document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
+            
+            // Логика доступности магазина
+            const afkBtn = document.getElementById('buy-afk');
+            if (balance >= 500) {
+                afkBtn.disabled = false;
+                document.getElementById('afk-desc').innerText = "Доступно! Цена: 500";
             }
-
-            // Сохранение
-            localStorage.setItem('dc_bal', balance);
-            localStorage.setItem('dc_pre', prestige);
-            localStorage.setItem('dc_afk', afkLevel);
         }
 
         function buyAfk() {
-            let nextAfkCost = AFK_BASE_COST * (afkLevel + 1);
-            if (balance >= nextAfkCost) {
-                balance -= nextAfkCost;
+            if (balance >= 500) {
+                balance -= 500;
                 afkLevel++;
                 updateUI();
             }
         }
 
-        function doPrestige() {
-            if (confirm("Сбросить всё ради усиления x1.2?")) {
+        function checkPrestige() {
+            if (balance >= 1000000000 && prestige < 10) {
                 prestige++;
                 balance = 0;
                 afkLevel = 0;
+                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН! Прогресс сброшен, доход x1.2");
                 updateUI();
             }
         }
 
-        // AFK Цикл (каждую секунду)
+        // AFK Цикл (раз в секунду)
         setInterval(() => {
             if (afkLevel > 0) {
-                let income = (afkLevel * 2) * (1 + prestige * 0.2);
-                balance += income;
+                let multiplier = Math.pow(1.2, prestige);
+                balance += (afkLevel * 5) * multiplier;
                 updateUI();
             }
         }, 1000);
 
-        updateUI();
+        tg.expand();
     </script>
 </body>
 </html>
