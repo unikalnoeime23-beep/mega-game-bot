@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Danila Clicker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Навигация как в других играх */
+        .nav { display: flex; width: 100%; background: #1a1a1a; border-bottom: 1px solid #333; }
+        .nav button { flex: 1; padding: 15px; background: none; border: none; color: #888; font-weight: bold; cursor: pointer; }
+        .nav button.active { color: #f39c12; border-bottom: 2px solid #f39c12; }
+
+        .page { display: none; width: 100%; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .page.active { display: flex; }
+
+        .balance-text { font-size: 32px; font-weight: bold; color: #f1c40f; margin-bottom: 5px; }
+        .prestige-info { font-size: 16px; color: #bdc3c7; margin-bottom: 20px; }
+
+        /* Круглая кнопка */
+        #click-button {
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4);
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            border: 8px solid #962d22;
+        }
+        #click-button:active { transform: scale(0.92); }
+
+        /* Всплывающие цифры */
+        .pop-up {
+            position: absolute;
+            color: #f1c40f;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-120px); opacity: 0; }
+        }
+
+        /* Магазин Кликера */
+        .shop-container { width: 90%; max-width: 400px; padding: 20px 0; }
+        .shop-item {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+        }
+        .buy-btn { background: #27ae60; border: none; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
+        .buy-btn:disabled { background: #444; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <button id="tab-game" class="active" onclick="tab('game')">КЛИКЕР</button>
+        <button id="tab-shop" onclick="tab('shop')">МАГАЗИН</button>
+        <button onclick="location.href='index.html'" style="color: #e74c3c;">ВЫХОД</button>
+    </div>
+
+    <div id="page-game" class="page active">
+        <div class="balance-text"><span id="balance">0</span> DC</div>
+        <div class="prestige-info">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
+        
+        <div id="click-button">CLICK</div>
+        
+        <div style="margin-top: 20px; color: #888;">AFK Доход: <span id="afk-val">0</span>/сек</div>
+    </div>
+
+    <div id="page-shop" class="page">
+        <h2>Апгрейды Кликера</h2>
+        <div class="shop-container">
+            <div class="shop-item">
+                <div><strong>Сила клика</strong><br><small id="click-price">Цена: 100</small></div>
+                <button class="buy-btn" id="buy-click" onclick="buy('click')">Купить</button>
+            </div>
+            <div class="shop-item">
+                <div><strong>AFK-Бот</strong><br><small id="afk-price">Цена: 500</small></div>
+                <button class="buy-btn" id="buy-afk" onclick="buy('afk')">Купить</button>
+            </div>
+            <div class="shop-item">
+                <div><strong>Серверная</strong><br><small id="serv-price">Цена: 5000</small></div>
+                <button class="buy-btn" id="buy-serv" onclick="buy('serv')">Купить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Данные из общего хранилища
+        let coins = parseFloat(localStorage.getItem('danila_coins')) || 0;
+        let prestige = parseInt(localStorage.getItem('danila_prestige')) || 0;
+        let clickPower = parseInt(localStorage.getItem('clicker_power')) || 1;
+        let afkLevel = parseInt(localStorage.getItem('clicker_afk')) || 0;
+        let servLevel = parseInt(localStorage.getItem('clicker_serv')) || 0;
+
+        const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
+
+        function tab(name) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+            updateUI();
+        }
+
+        // Клик
+        const btn = document.getElementById('click-button');
+        btn.addEventListener('pointerdown', (e) => {
+            let multiplier = Math.pow(1.2, prestige);
+            let gain = clickPower * multiplier;
+            coins += gain;
+            showPopUp(e.clientX, e.clientY, gain);
+            updateUI();
+            checkPrestige();
+        });
+
+        function showPopUp(x, y, val) {
+            const pop = document.createElement('div');
+            pop.className = 'pop-up';
+            pop.style.left = x + 'px';
+            pop.style.top = y + 'px';
+            pop.innerText = '+' + val.toFixed(1);
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 1000);
+        }
+
+        function buy(type) {
+            let price = 0;
+            if(type === 'click') price = 100 * clickPower;
+            if(type === 'afk') price = 500 * (afkLevel + 1);
+            if(type === 'serv') price = 5000 * (servLevel + 1);
+
+            if (coins >= price) {
+                coins -= price;
+                if(type === 'click') clickPower++;
+                if(type === 'afk') afkLevel++;
+                if(type === 'serv') servLevel++;
+                save();
+                updateUI();
+            }
+        }
+
+        function save() {
+            localStorage.setItem('danila_coins', coins);
+            localStorage.setItem('danila_prestige', prestige);
+            localStorage.setItem('clicker_power', clickPower);
+            localStorage.setItem('clicker_afk', afkLevel);
+            localStorage.setItem('clicker_serv', servLevel);
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = Math.floor(coins).toLocaleString();
+            document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
+            document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
+            
+            let afkIncome = (afkLevel * 5) + (servLevel * 50);
+            document.getElementById('afk-val').innerText = (afkIncome * Math.pow(1.2, prestige)).toFixed(1);
+
+            // Цены
+            document.getElementById('click-price').innerText = "Цена: " + (100 * clickPower);
+            document.getElementById('afk-price').innerText = "Цена: " + (500 * (afkLevel + 1));
+            document.getElementById('serv-price').innerText = "Цена: " + (5000 * (servLevel + 1));
+
+            // Кнопки
+            document.getElementById('buy-click').disabled = coins < (100 * clickPower);
+            document.getElementById('buy-afk').disabled = coins < (500 * (afkLevel + 1));
+            document.getElementById('buy-serv').disabled = coins < (5000 * (servLevel + 1));
+            
+            save();
+        }
+
+        function checkPrestige() {
+            if (coins >= 1000000000 && prestige < 10) {
+                prestige++;
+                coins = 0;
+                afkLevel = 0;
+                servLevel = 0;
+                clickPower = 1;
+                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН!");
+                save();
+                updateUI();
+            }
+        }
+
+        // AFK Цикл
+        setInterval(() => {
+            let multiplier = Math.pow(1.2, prestige);
+            let income = ((afkLevel * 5) + (servLevel * 50)) / 10;
+            if (income > 0) {
+                coins += income * multiplier;
+                updateUI();
+            }
+        }, 100);
+
+        updateUI();
+    </script>
+</body>
+</html>
