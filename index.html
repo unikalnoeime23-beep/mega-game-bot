@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila Hub Retro Fixed</title>
+    <title>Danila Hub Retro Gold</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #8bac0f; --dark: #0f380f; }
+        :root { --bg: #8bac0f; --dark: #0f380f; --pixel: #306230; }
         body { 
             font-family: 'Press Start 2P', cursive; background: #222; 
             color: var(--dark); margin: 0; display: flex; flex-direction: column; 
@@ -17,28 +17,28 @@
         .screen {
             flex: 1; background: var(--bg); margin: 5px; border: 8px solid #444;
             display: flex; flex-direction: column; position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
         }
 
         .header { padding: 8px; border-bottom: 3px solid var(--dark); display: flex; justify-content: space-between; font-size: 8px; }
 
         .nav { display: flex; background: #333; }
-        .nav button { flex: 1; padding: 12px; border: none; background: #444; color: #888; font-family: 'Press Start 2P'; font-size: 8px; }
+        .nav button { flex: 1; padding: 12px; border: none; background: #444; color: #888; font-family: 'Press Start 2P'; font-size: 7px; }
         .nav button.active { background: var(--bg); color: var(--dark); }
 
         .view { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; }
         .view.active { display: flex; }
 
-        /* Игры */
         canvas { background: var(--bg); border: 4px solid var(--dark); display: block; image-rendering: pixelated; }
 
-        /* Кнопки */
         .controls { display: grid; grid-template-columns: repeat(3, 60px); gap: 10px; margin-top: 10px; }
         .btn { background: var(--dark); color: var(--bg); border: none; width: 60px; height: 50px; font-size: 18px; border-radius: 5px; cursor: pointer; }
         
-        .card { border: 3px solid var(--dark); padding: 10px; margin: 10px; width: 85%; text-align: center; }
-        .buy-btn { background: var(--dark); color: var(--bg); border: none; padding: 8px; font-family: 'Press Start 2P'; font-size: 8px; }
+        .card { border: 3px solid var(--dark); padding: 10px; margin: 10px; width: 85%; text-align: center; background: rgba(0,0,0,0.05); }
+        .buy-btn { background: var(--dark); color: var(--bg); border: none; padding: 8px; font-family: 'Press Start 2P'; font-size: 8px; width: 100%; margin-top: 5px; }
+        .buy-btn:disabled { opacity: 0.3; }
 
-        #tap-btn { width: 140px; height: 140px; background: var(--dark); border: 6px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        #tap-btn { width: 130px; height: 130px; background: var(--dark); border: 6px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; }
     </style>
 </head>
 <body>
@@ -57,25 +57,25 @@
 
     <div id="v-menu" class="view active">
         <div class="card">
-            <div style="font-size: 8px;">TAP MASTER</div>
-            <button class="buy-btn" style="width:100%; margin-top:10px;" onclick="startGame('clicker')">START</button>
+            <div style="font-size: 8px;">PIXEL TAP</div>
+            <button class="buy-btn" onclick="startGame('clicker')">SELECT</button>
         </div>
         <div class="card">
-            <div style="font-size: 8px;">SNAKE</div>
-            <button class="buy-btn" style="width:100%; margin-top:10px;" onclick="startGame('snake')">START</button>
+            <div style="font-size: 8px;">SNAKE 8BIT</div>
+            <button class="buy-btn" onclick="startGame('snake')">SELECT</button>
         </div>
         <div class="card">
-            <div style="font-size: 8px;">JUMPER</div>
-            <button class="buy-btn" style="width:100%; margin-top:10px;" onclick="startGame('jumper')">START</button>
+            <div style="font-size: 8px;">SKY JUMP</div>
+            <button class="buy-btn" onclick="startGame('jumper')">SELECT</button>
         </div>
     </div>
 
     <div id="v-clicker" class="view">
-        <div id="tap-btn" onpointerdown="doTap(event)">TAP!</div>
+        <div id="tap-btn" onpointerdown="doTap(event)">PUSH</div>
     </div>
 
     <div id="v-snake" class="view">
-        <canvas id="snakeCanvas" width="200" height="200"></canvas>
+        <canvas id="snakeCanvas" width="180" height="180"></canvas>
         <div class="controls">
             <button class="btn" style="grid-column: 2" onpointerdown="setDir('up')">↑</button>
             <button class="btn" style="grid-row: 2; grid-column: 1" onpointerdown="setDir('left')">←</button>
@@ -93,7 +93,7 @@
     </div>
 
     <div id="v-shop" class="view" style="justify-content: flex-start; overflow-y: auto; padding-top: 10px;">
-        <div id="shop-list" style="width: 100%;"></div>
+        <div id="shop-list" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
     </div>
 </div>
 
@@ -101,9 +101,24 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let coins = parseFloat(localStorage.getItem('dc_save')) || 0;
-    let pwr = 1, auto = 0, snS = 120, snM = 1, jJ = -11, jG = 0.5;
-    let curView = 'menu', mainLoop, jInput = 0, isJumperActive = false;
+    let coins = parseFloat(localStorage.getItem('dc_v2')) || 0;
+    let pwr = 1, auto = 0, snS = 130, snM = 1, jJ = -10, jG = 0.4;
+    let curView = 'menu', activeGame = 'none', mainLoop, jInput = 0;
+
+    // --- ЗВУКОВОЙ ДВИЖОК ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(freq, type, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+    }
 
     function showTab(tab) {
         stopAll();
@@ -119,51 +134,70 @@
 
     function stopAll() {
         clearInterval(mainLoop);
-        isJumperActive = false;
+        activeGame = 'none';
     }
 
     function startGame(game) {
+        activeGame = game;
         showTab(game);
-        setTimeout(() => { // Задержка, чтобы canvas успел отрисоваться
+        setTimeout(() => {
             if(game === 'snake') initSnake();
             if(game === 'jumper') initJumper();
-        }, 50);
+        }, 100);
     }
 
     function updateUI() {
         document.getElementById('dc-val').innerText = Math.floor(coins);
-        localStorage.setItem('dc_save', coins);
+        localStorage.setItem('dc_v2', coins);
     }
 
-    // --- МАГАЗИН ---
+    // --- МАГАЗИН (ИСПРАВЛЕН) ---
     const upgrades = {
-        clicker: [{n:"TAP+", c:50, f:()=>pwr++}, {n:"AUTO+", c:500, f:()=>auto+=2}],
-        snake: [{n:"X2 APPLE", c:200, f:()=>snM++}],
-        jumper: [{n:"JUMP+", c:300, f:()=>jJ--}]
+        clicker: [
+            {n:"8BIT CPU", d:"+1 PWR", c:50, f:()=>pwr++},
+            {n:"BOT V1", d:"+5/SEC", c:500, f:()=>auto+=5},
+            {n:"16BIT CPU", d:"+10 PWR", c:2500, f:()=>pwr+=10}
+        ],
+        snake: [
+            {n:"APPLE X2", d:"MORE COINS", c:200, f:()=>snM++},
+            {n:"RAM UP", d:"SLOWER", c:600, f:()=>snS+=15}
+        ],
+        jumper: [
+            {n:"SPRING", d:"JUMP+", c:300, f:()=>jJ-=0.5},
+            {n:"GRAVITY-", d:"LOWER G", c:800, f:()=>jG-=0.05}
+        ]
     };
 
     function renderShop() {
         const cont = document.getElementById('shop-list');
         cont.innerHTML = '';
-        let m = (upgrades[curView]) ? curView : 'clicker';
-        upgrades[m].forEach((it, i) => {
+        // Если зашли в магазин из меню, показываем магазин последней активной игры или кликера
+        let mode = (upgrades[activeGame]) ? activeGame : 'clicker';
+        document.getElementById('title').innerText = "SHOP:" + mode.toUpperCase();
+        
+        upgrades[mode].forEach((it, i) => {
             let d = document.createElement('div');
-            d.className = 'card'; d.style.width='90%'; d.style.display='flex'; d.style.justify='space-between';
-            d.innerHTML = `<span style="font-size:7px">${it.n} (${it.c})</span>
-                           <button class="buy-btn" onclick="buy('${m}',${i})">BUY</button>`;
+            d.className = 'card';
+            d.innerHTML = `<div style="font-size:7px; margin-bottom:5px;">${it.n}<br><small>${it.d}</small></div>
+                           <button class="buy-btn" id="b-${i}" onclick="buy('${mode}',${i})">${it.c} DC</button>`;
             cont.appendChild(d);
+            if(coins < it.c) document.getElementById('b-'+i).disabled = true;
         });
     }
 
     function buy(m, i) {
         let it = upgrades[m][i];
-        if(coins >= it.c) { coins -= it.c; it.f(); it.c = Math.floor(it.c*1.7); updateUI(); renderShop(); }
+        if(coins >= it.c) {
+            playSound(600, 'square', 0.1);
+            coins -= it.c; it.f(); it.c = Math.floor(it.c*1.8); updateUI(); renderShop();
+        }
     }
 
     // --- КЛИКЕР ---
     function doTap(e) {
+        playSound(400, 'sine', 0.05);
         coins += pwr; updateUI();
-        let p = document.createElement('div'); p.style.position='absolute'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+pwr; p.style.fontSize='10px'; p.style.pointerEvents='none'; document.body.appendChild(p);
+        let p = document.createElement('div'); p.style.position='absolute'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+pwr; p.style.fontSize='10px'; p.style.color='var(--dark)'; document.body.appendChild(p);
         setTimeout(()=>p.remove(), 400);
     }
 
@@ -180,57 +214,53 @@
         if(d=='left'&&sd!='right') sd='left'; if(d=='right'&&sd!='left') sd='right';
     }
     function drawSnake() {
-        sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,200,200);
+        sX.fillStyle = '#8bac0f'; sX.fillRect(0,0,180,180);
         sX.fillStyle = '#0f380f'; sn.forEach(p => sX.fillRect(p.x*10, p.y*10, 9, 9));
         sX.strokeRect(sf.x*10, sf.y*10, 9, 9);
         let h = {...sn[0]};
         if(sd=='up') h.y--; if(sd=='down') h.y++; if(sd=='left') h.x--; if(sd=='right') h.x++;
         if(h.x==sf.x && h.y==sf.y) {
-            coins += 10*snM; updateUI(); sf = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
+            playSound(800, 'sine', 0.1);
+            coins += 10*snM; updateUI(); sf = {x:Math.floor(Math.random()*18), y:Math.floor(Math.random()*18)};
         } else sn.pop();
-        if(h.x<0||h.x>=20||h.y<0||h.y>=20||sn.some(s=>s.x==h.x&&s.y==h.y)) initSnake();
-        else sn.unshift(h);
+        if(h.x<0||h.x>=18||h.y<0||h.y>=18||sn.some(s=>s.x==h.x&&s.y==h.y)) {
+            playSound(150, 'sawtooth', 0.3); initSnake();
+        } else sn.unshift(h);
     }
 
-    // --- ДЖАМПЕР ---
+    // --- ДЖАМПЕР (ИСПРАВЛЕНА СКОРОСТЬ) ---
     const jC = document.getElementById('jumperCanvas'), jX = jC.getContext('2d');
     let jp, jPlats;
     function initJumper() {
-        isJumperActive = true; jp = {x:90, y:150, vy:0}; jPlats = [];
-        for(let i=0; i<6; i++) jPlats.push({x:Math.random()*160, y:i*50, w:40});
-        requestAnimationFrame(drawJumper);
+        jp = {x:90, y:150, vy:0}; jPlats = [];
+        for(let i=0; i<6; i++) jPlats.push({x:Math.random()*160, y:i*50, w:45, vx: Math.random()>0.8 ? 1 : 0});
+        if(mainLoop) cancelAnimationFrame(mainLoop);
+        mainLoop = requestAnimationFrame(drawJumper);
     }
     function drawJumper() {
-        if(!isJumperActive || curView !== 'jumper') return;
+        if(activeGame !== 'jumper') return;
         jX.fillStyle = '#8bac0f'; jX.fillRect(0,0,200,280);
-        jp.vy += jG; jp.y += jp.vy; jp.x += jInput * 4;
+        jp.vy += jG; jp.y += jp.vy; jp.x += jInput * 3.5; // Замедлено управление
         jX.fillStyle = '#0f380f';
         jPlats.forEach(p => {
+            p.x += p.vx; if(p.x<0||p.x>160) p.vx*=-1;
             jX.fillRect(p.x, p.y, p.w, 8);
-            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) { jp.vy = jJ; coins += 2; updateUI(); }
+            if(jp.vy > 0 && jp.x+15 > p.x && jp.x < p.x+p.w && jp.y+15 > p.y && jp.y+15 < p.y+10) {
+                playSound(500, 'square', 0.05);
+                jp.vy = jJ; coins += 2; updateUI();
+            }
         });
         if(jp.y < 100) {
             let d = 100 - jp.y; jp.y = 100;
-            jPlats.forEach(p => { p.y += d; if(p.y > 280) { p.y = 0; p.x = Math.random()*160; }});
+            jPlats.forEach(p => { p.y += d; if(p.y > 280) { p.y = 0; p.x = Math.random()*160; p.vx = Math.random()>0.8?1:0; }});
         }
         jX.fillRect(jp.x, jp.y, 15, 15);
-        if(jp.y > 300) initJumper();
+        if(jp.y > 300) { playSound(100, 'sawtooth', 0.2); initJumper(); }
         if(jp.x < 0) jp.x = 200; if(jp.x > 200) jp.x = 0;
-        requestAnimationFrame(drawJumper);
+        mainLoop = requestAnimationFrame(drawJumper);
     }
 
-    // Клавиатура для ПК
-    window.onkeydown = (e) => {
-        if(curView === 'snake') {
-            if(e.key === 'ArrowUp') setDir('up'); if(e.key === 'ArrowDown') setDir('down');
-            if(e.key === 'ArrowLeft') setDir('left'); if(e.key === 'ArrowRight') setDir('right');
-        }
-        if(curView === 'jumper') {
-            if(e.key === 'ArrowLeft') jInput = -1; if(e.key === 'ArrowRight') jInput = 1;
-        }
-    };
-    window.onkeyup = (e) => { if(e.key.includes('Arrow')) jInput = 0; };
-
+    // Авто-майнинг
     setInterval(() => { if(auto > 0) { coins += auto/10; updateUI(); }}, 100);
     updateUI();
 </script>
