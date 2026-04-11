@@ -77,9 +77,18 @@
             padding: 8px 15px;
             border-radius: 6px;
             font-weight: bold;
+            cursor: pointer;
         }
 
-        button:disabled { background: #555; color: #888; }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+
+        /* Кнопка престижа */
+        #prestige-btn {
+            background: #8e44ad;
+            margin-top: 10px;
+            width: 100%;
+            display: none; /* Скрыта по умолчанию */
+        }
     </style>
 </head>
 <body>
@@ -94,23 +103,30 @@
     <div class="shop-container">
         <div class="shop-item">
             <div>
-                <strong>AFK-Бот</strong><br>
+                <strong>AFK-Бот (Ур. <span id="afk-lvl">0</span>)</strong><br>
                 <small id="afk-desc">Нужно 500 DC</small>
             </div>
-            <button id="buy-afk" onclick="buyAfk()" disabled>Купить</button>
+            <button id="buy-afk" onclick="buyAfk()">Купить</button>
         </div>
+        <button id="prestige-btn" onclick="doPrestige()">СБРОСИТЬ ПРОГРЕСС (ПРЕСТИЖ +1)</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let balance = 0;
-        let prestige = 0;
-        let afkLevel = 0;
+        
+        // Загрузка данных из памяти браузера
+        let balance = parseFloat(localStorage.getItem('danila_bal')) || 0;
+        let prestige = parseInt(localStorage.getItem('danila_pre')) || 0;
+        let afkLevel = parseInt(localStorage.getItem('danila_afk')) || 0;
         let clickPower = 1;
+
         const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
+        const AFK_BASE_COST = 500;
+        const PRESTIGE_GOAL = 1000000000; // 1 миллиард
 
         const btn = document.getElementById('click-button');
         
+        // Клик
         btn.addEventListener('pointerdown', (e) => {
             let multiplier = Math.pow(1.2, prestige);
             let currentGain = clickPower * multiplier;
@@ -118,7 +134,6 @@
             
             showPopUp(e.clientX, e.clientY, currentGain);
             updateUI();
-            checkPrestige();
         });
 
         function showPopUp(x, y, val) {
@@ -132,32 +147,57 @@
         }
 
         function updateUI() {
+            // Обновление текста баланса и уровней
             document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
             document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
             document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
-            
-            // Логика доступности магазина
+            document.getElementById('afk-lvl').innerText = afkLevel;
+
+            // Расчет стоимости следующего AFK бота
+            let nextAfkCost = AFK_BASE_COST * (afkLevel + 1);
             const afkBtn = document.getElementById('buy-afk');
-            if (balance >= 500) {
+            const afkDesc = document.getElementById('afk-desc');
+
+            // Логика цели (магазин доступен только при достижении суммы)
+            if (balance >= nextAfkCost) {
                 afkBtn.disabled = false;
-                document.getElementById('afk-desc').innerText = "Доступно! Цена: 500";
+                afkDesc.innerText = `Доступно! Цена: ${nextAfkCost}`;
+                afkDesc.style.color = "#27ae60";
+            } else {
+                afkBtn.disabled = true;
+                afkDesc.innerText = `Нужно ${nextAfkCost} DC`;
+                afkDesc.style.color = "#bdc3c7";
             }
+
+            // Логика престижа (появляется только при 1 миллиарде)
+            const pBtn = document.getElementById('prestige-btn');
+            if (balance >= PRESTIGE_GOAL && prestige < 10) {
+                pBtn.style.display = "block";
+            } else {
+                pBtn.style.display = "none";
+            }
+
+            // Сохранение в память
+            localStorage.setItem('danila_bal', balance);
+            localStorage.setItem('danila_pre', prestige);
+            localStorage.setItem('danila_afk', afkLevel);
         }
 
         function buyAfk() {
-            if (balance >= 500) {
-                balance -= 500;
+            let nextAfkCost = AFK_BASE_COST * (afkLevel + 1);
+            if (balance >= nextAfkCost) {
+                balance -= nextAfkCost;
                 afkLevel++;
                 updateUI();
             }
         }
 
-        function checkPrestige() {
-            if (balance >= 1000000000 && prestige < 10) {
+        function doPrestige() {
+            if (prestige < 10) {
                 prestige++;
                 balance = 0;
                 afkLevel = 0;
-                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН! Прогресс сброшен, доход x1.2");
+                alert("ПРЕСТИЖ ПОЛУЧЕН! Множитель увеличен до x" + Math.pow(1.2, prestige).toFixed(1));
                 updateUI();
             }
         }
@@ -166,11 +206,14 @@
         setInterval(() => {
             if (afkLevel > 0) {
                 let multiplier = Math.pow(1.2, prestige);
+                // Доход: 5 за уровень бота * множитель престижа
                 balance += (afkLevel * 5) * multiplier;
                 updateUI();
             }
         }, 1000);
 
+        // Инициализация интерфейса при запуске
+        updateUI();
         tg.expand();
     </script>
 </body>
