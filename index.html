@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila-Clicker</title>
+    <title>Danila Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -13,7 +13,6 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
             height: 100vh;
             overflow: hidden;
             user-select: none;
@@ -22,162 +21,119 @@
         /* Навигация */
         .nav-bar {
             display: flex;
-            width: 100%;
             background: #1a1a1a;
             justify-content: space-around;
             padding: 10px 0;
             border-bottom: 2px solid #333;
-            z-index: 10;
         }
-
         .nav-btn {
             background: none;
             border: none;
             color: #888;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            padding: 10px;
+            cursor: pointer;
         }
-
         .nav-btn.active { color: #f39c12; border-bottom: 2px solid #f39c12; }
         .exit-btn { color: #e74c3c; }
 
-        /* Страницы */
-        .page {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            padding-top: 20px;
-        }
-
+        /* Контент */
+        .page { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; position: relative; }
         .page.active { display: flex; }
 
-        .header { text-align: center; margin-bottom: 20px; }
-        .balance-text { font-size: 32px; font-weight: bold; color: #f1c40f; margin-bottom: 5px; }
-        .prestige-info { font-size: 16px; color: #bdc3c7; }
-
-        /* Кликер */
+        /* Кликер (Твой стиль) */
+        .header { position: absolute; top: 20px; text-align: center; }
+        .balance-text { font-size: 32px; font-weight: bold; color: #f39c12; margin-bottom: 5px; }
         #click-button {
-            width: 220px;
-            height: 220px;
+            width: 200px; height: 200px;
             background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4);
-            cursor: pointer;
-            transition: transform 0.05s ease;
-            border: 8px solid #962d22;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold; border: 8px solid #962d22;
+            box-shadow: 0 0 30px rgba(231, 76, 60, 0.4); transition: transform 0.05s;
         }
         #click-button:active { transform: scale(0.95); }
 
-        .pop-up {
-            position: absolute;
-            color: #f1c40f;
-            font-size: 24px;
-            font-weight: bold;
-            pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
-            z-index: 100;
+        /* Список игр */
+        .game-list { width: 80%; }
+        .game-card {
+            background: #1e1e1e; padding: 20px; border-radius: 15px; margin-bottom: 15px;
+            text-align: center; border: 1px solid #333; cursor: pointer;
         }
+        .game-card:hover { border-color: #f39c12; }
 
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-120px); opacity: 0; }
-        }
+        /* Всплывашки */
+        .pop-up { position: absolute; color: #f1c40f; font-size: 24px; font-weight: bold; pointer-events: none; animation: floatUp 1s ease-out forwards; }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
 
-        /* Магазин */
-        .shop-container {
-            width: 90%;
-            overflow-y: auto;
-            max-height: 70vh;
-            padding-bottom: 20px;
-        }
-        .shop-item {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            border: 1px solid #333;
-        }
-        .shop-item.locked { opacity: 0.5; filter: grayscale(1); }
-
-        button {
-            background: #27ae60;
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-weight: bold;
-        }
+        button.buy-btn { background: #27ae60; border: none; color: white; padding: 8px 15px; border-radius: 6px; font-weight: bold; margin-top: 10px; }
         button:disabled { background: #555; color: #888; }
     </style>
 </head>
 <body>
 
     <div class="nav-bar">
-        <button class="nav-btn active" onclick="showPage('game-page', this)">ИГРА</button>
-        <button class="nav-btn" onclick="showPage('shop-page', this)">МАГАЗИН</button>
-        <button class="nav-btn exit-btn" onclick="exitApp()">ВЫХОД</button>
+        <button class="nav-btn active" onclick="showPage('list-page', this)">🎮 ИГРЫ</button>
+        <button class="nav-btn" onclick="showPage('clicker-page', this)">💰 КЛИКЕР</button>
+        <button class="nav-btn exit-btn" onclick="tg.close()">ВЫХОД</button>
     </div>
 
-    <div id="game-page" class="page active">
+    <div id="list-page" class="page active">
+        <h2>Выбери игру, Данил</h2>
+        <div class="game-list">
+            <div class="game-card" onclick="showPage('clicker-page')">
+                <h3>Danila Coin Clicker</h3>
+                <p>Жми и богатей!</p>
+            </div>
+            <div class="game-card" onclick="alert('Запуск Square Jumper...')">
+                <h3>Square Jumper</h3>
+                <p>Тот самый квадратный прыгун</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="clicker-page" class="page">
         <div class="header">
             <div class="balance-text"><span id="balance">0</span> DC</div>
-            <div class="prestige-info">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
+            <div class="prestige-info" style="color:#bdc3c7">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
         </div>
-        <div id="click-button">CLICK</div>
-        <div style="margin-top: 20px; color: #555;">AFK Доход: <span id="afk-rate">0</span>/сек</div>
-    </div>
 
-    <div id="shop-page" class="page">
-        <h2 style="color: #f39c12;">УЛУЧШЕНИЯ</h2>
-        <div class="shop-container" id="shop-list">
+        <div id="click-button">CLICK</div>
+
+        <div style="margin-top: 30px; width: 80%;">
+            <div style="background: #1e1e1e; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
+                <div>
+                    <strong>AFK-Бот</strong><br>
+                    <small id="afk-desc" style="color:#888">Нужно 500 DC</small>
+                </div>
+                <button class="buy-btn" id="buy-afk" onclick="buyAfk()" disabled>Купить</button>
             </div>
+        </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
+        tg.expand();
+
         let balance = 0;
         let prestige = 0;
+        let afkLevel = 0;
         let clickPower = 1;
         const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
 
-        // База улучшений
-        const upgrades = [
-            { id: 'click1', name: 'Сильные пальцы', type: 'click', cost: 50, power: 1, desc: '+1 за клик' },
-            { id: 'afk1', name: 'Маленький бот', type: 'afk', cost: 500, power: 5, desc: '+5 DC в сек' },
-            { id: 'click2', name: 'Золотой молоток', type: 'click', cost: 2500, power: 10, desc: '+10 за клик' },
-            { id: 'afk2', name: 'Ферма ботов', type: 'afk', cost: 15000, power: 50, desc: '+50 DC в сек' },
-            { id: 'click3', name: 'Мега Клик', type: 'click', cost: 100000, power: 500, desc: '+500 за клик' },
-            { id: 'afk3', name: 'Сервер Данилы', type: 'afk', cost: 500000, power: 2500, desc: '+2500 DC в сек' }
-        ];
-
-        let ownedUpgrades = [];
-        let afkTotal = 0;
-
+        // Навигация
         function showPage(pageId, btn) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            if(btn) btn.classList.add('active');
+            
+            if(btn) {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
         }
 
-        function exitApp() {
-            tg.close();
-        }
-
-        const btn = document.getElementById('click-button');
-        btn.addEventListener('pointerdown', (e) => {
+        // Логика кликера (Твой код)
+        const clickBtn = document.getElementById('click-button');
+        clickBtn.addEventListener('pointerdown', (e) => {
             let multiplier = Math.pow(1.2, prestige);
             let currentGain = clickPower * multiplier;
             balance += currentGain;
@@ -191,76 +147,54 @@
             pop.className = 'pop-up';
             pop.style.left = (x - 20) + 'px';
             pop.style.top = (y - 20) + 'px';
-            pop.innerText = '+' + Math.floor(val);
+            pop.innerText = '+' + val.toFixed(1);
             document.body.appendChild(pop);
             setTimeout(() => pop.remove(), 1000);
-        }
-
-        function buyUpgrade(index) {
-            const upg = upgrades[index];
-            if (balance >= upg.cost) {
-                balance -= upg.cost;
-                if (upg.type === 'click') clickPower += upg.power;
-                if (upg.type === 'afk') afkTotal += upg.power;
-                
-                ownedUpgrades.push(upg.id);
-                upg.cost = Math.floor(upg.cost * 1.5); // Увеличение цены
-                updateUI();
-                renderShop();
-            }
-        }
-
-        function renderShop() {
-            const list = document.getElementById('shop-list');
-            list.innerHTML = '';
-            upgrades.forEach((upg, index) => {
-                // Улучшение открывается, если баланс когда-либо достигал 70% от цены
-                const item = document.createElement('div');
-                item.className = 'shop-item';
-                
-                const isAffordable = balance >= upg.cost;
-                
-                item.innerHTML = `
-                    <div>
-                        <strong>${upg.name}</strong><br>
-                        <small>${upg.desc}</small><br>
-                        <small style="color: #f1c40f">Цена: ${upg.cost.toLocaleString()}</small>
-                    </div>
-                    <button onclick="buyUpgrade(${index})" ${isAffordable ? '' : 'disabled'}>Купить</button>
-                `;
-                list.appendChild(item);
-            });
         }
 
         function updateUI() {
             document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
             document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
             document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
-            document.getElementById('afk-rate').innerText = Math.floor(afkTotal * Math.pow(1.2, prestige));
-            renderShop();
+            
+            const afkBtn = document.getElementById('buy-afk');
+            if (balance >= 500) {
+                afkBtn.disabled = false;
+                document.getElementById('afk-desc').innerText = "Доступно! Цена: 500";
+                document.getElementById('afk-desc').style.color = "#27ae60";
+            } else {
+                afkBtn.disabled = true;
+                document.getElementById('afk-desc').innerText = `Нужно 500 DC`;
+                document.getElementById('afk-desc').style.color = "#888";
+            }
+        }
+
+        function buyAfk() {
+            if (balance >= 500) {
+                balance -= 500;
+                afkLevel++;
+                updateUI();
+            }
         }
 
         function checkPrestige() {
             if (balance >= 1000000000 && prestige < 10) {
                 prestige++;
                 balance = 0;
-                clickPower = 1;
-                afkTotal = 0;
-                upgrades.forEach(u => u.cost = u.cost / 2); // Скидка при престиже
-                alert("НОВЫЙ ПРЕСТИЖ! x1.2 к доходу навсегда!");
+                afkLevel = 0;
+                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН!");
                 updateUI();
             }
         }
 
         setInterval(() => {
-            if (afkTotal > 0) {
+            if (afkLevel > 0) {
                 let multiplier = Math.pow(1.2, prestige);
-                balance += (afkTotal / 10) * multiplier; // Делим на 10, так как интервал 100мс
+                balance += (afkLevel * 5) * multiplier;
                 updateUI();
             }
-        }, 100);
+        }, 1000);
 
-        tg.expand();
         updateUI();
     </script>
 </body>
