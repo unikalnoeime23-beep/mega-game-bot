@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Данила Хаб 1990: Эволюция</title>
+    <title>Данила Хаб: Братуха Эдишн</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #8bac0f; --dark: #0f380f; }
         body { font-family: 'Press Start 2P', cursive; background: #1a1a1a; color: var(--dark); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; touch-action: none; }
-        .console { flex: 1; background: var(--bg); margin: 8px; border: 10px solid #333; border-radius: 15px; display: flex; flex-direction: column; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.4); }
+        .console { flex: 1; background: var(--bg); margin: 8px; border: 10px solid #333; border-radius: 15px; display: flex; flex-direction: column; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.4); overflow: hidden; }
         .header { padding: 8px; border-bottom: 3px solid var(--dark); display: flex; flex-direction: column; background: rgba(0,0,0,0.05); }
         .top-row { display: flex; justify-content: space-between; font-size: 8px; margin-bottom: 4px; }
         .status-row { font-size: 6px; color: var(--dark); margin-bottom: 5px; text-transform: uppercase; }
         
-        /* Шкала прогресса цели */
         .goal-bar { width: 100%; height: 6px; border: 1px solid var(--dark); background: transparent; overflow: hidden; }
         #goal-fill { height: 100%; background: var(--dark); width: 0%; transition: width 0.3s; }
 
@@ -35,13 +34,11 @@
 
         #tap-btn { width: 120px; height: 120px; background: var(--dark); border: 6px double var(--bg); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 10px; text-align: center; position: relative; }
         
-        /* Секретный артефакт */
         #artifact { position: absolute; width: 30px; height: 30px; background: var(--dark); border: 2px solid var(--bg); display: none; z-index: 100; color: var(--bg); font-size: 8px; align-items: center; justify-content: center; }
 
         .pop { position: absolute; font-size: 8px; pointer-events: none; animation: popUp 0.6s forwards; color: var(--dark); }
         @keyframes popUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
 
-        /* Кнопка Престижа */
         .prestige-btn { background: #e74c3c; color: white; border: 4px solid #c0392b; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; width: 100%; margin-top: 10px; cursor: pointer; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { transform: scale(0.95); } to { transform: scale(1.02); } }
     </style>
@@ -73,7 +70,7 @@
         <div id="p-area" style="width: 85%;"></div>
     </div>
 
-    <div id="v-clicker" class="view">
+    <div id="v-clicker" class="view" style="transition: transform 0.1s;">
         <div id="tap-btn" onpointerdown="doTap(event)">ЖМИ!</div>
         <div id="artifact" onpointerdown="catchArtifact(event)">???</div>
     </div>
@@ -105,35 +102,52 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // УНИКАЛЬНЫЕ ИМЕНА ПРЕСТИЖЕЙ
     const prestigeTitles = [
-        "СМЕРТНЫЙ", 
-        "ПРОБУДИВШИЙСЯ", 
-        "ИСКАТЕЛЬ ИСТИНЫ", 
-        "ВЗЛОМЩИК МАТРИЦЫ", 
-        "КИБЕР-ЖРЕЦ", 
-        "ВЛАСТЕЛИН КОДА", 
-        "АРХИТЕКТОР СИСТЕМЫ", 
-        "ПОВЕЛИТЕЛЬ МУЛЬТИВЕРСА", 
-        "АБСОЛЮТНЫЙ ХАБ-МАГНАТ", 
-        "СОЗДАТЕЛЬ РЕАЛЬНОСТИ"
+        "СМЕРТНЫЙ", "ПРОБУДИВШИЙСЯ", "ИСКАТЕЛЬ ИСТИНЫ", "ВЗЛОМЩИК МАТРИЦЫ", 
+        "КИБЕР-ЖРЕЦ", "ВЛАСТЕЛИН КОДА", "АРХИТЕКТОР СИСТЕМЫ", 
+        "ПОВЕЛИТЕЛЬ МУЛЬТИВЕРСА", "АБСОЛЮТНЫЙ ХАБ-МАГНАТ", "СОЗДАТЕЛЬ РЕАЛЬНОСТИ"
     ];
 
     let coins = parseFloat(localStorage.getItem('dc_v4')) || 0;
     let prestigeCount = parseInt(localStorage.getItem('dc_prestige_level')) || 0; 
     let mult = prestigeCount + 1;
 
-    let pwr = 1, auto = 0, snS = 130, snM = 1, jJ = -9, jG = 0.35, curGame = 'clicker', jDir = 0, gameLoop;
+    // ЗАГРУЗКА УРОВНЕЙ ИЗ ПАМЯТИ
+    let lvls = JSON.parse(localStorage.getItem('dc_lvls_v4')) || {
+        c_pwr: 0, c_auto: 0, c_dbl: 0, c_kick: 0,
+        s_mult: 0, s_slow: 0,
+        j_jmp: 0, j_grv: 0
+    };
+
+    // БАЗОВЫЕ ЗНАЧЕНИЯ С УЧЕТОМ УРОВНЕЙ
+    let pwr = 1 + lvls.c_pwr;
+    let auto = lvls.c_auto * 5;
+    let snM = 1 + lvls.s_mult;
+    let snS = Math.max(50, 130 - (lvls.s_slow * 10));
+    let jJ = -9 - (lvls.j_jmp * 0.5);
+    let jG = 0.35 - (lvls.j_grv * 0.02);
+
+    let curGame = 'clicker', jDir = 0, gameLoop, kickTimer = 0;
 
     const aCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function beep(f, d) {
-        try { const o = aCtx.createOscillator(); const g = aCtx.createGain(); o.type='square'; o.frequency.value=f; g.gain.value=0.03; o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime+d); } catch(e){}
-    }
+    function beep(f, d) { try { const o = aCtx.createOscillator(); const g = aCtx.createGain(); o.type='square'; o.frequency.value=f; g.gain.value=0.03; o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime+d); } catch(e){} }
 
+    // ОБНОВЛЕННЫЕ УЛУЧШЕНИЯ
     const upgrades = {
-        clicker: [{n:"СИЛА ТАПА", d:"+1", c:50, f:()=>pwr++}, {n:"АВТО-БОТ", d:"+5/с", c:400, f:()=>auto+=5}],
-        snake: [{n:"МНОЖИТЕЛЬ", d:"Яблоки x2", c:150, f:()=>snM++}, {n:"МЕДЛЕННО", d:"-15мс", c:500, f:()=>snS+=15}],
-        jumper: [{n:"ПРУЖИНЫ", d:"Прыжок+", c:300, f:()=>jJ-=0.5}, {n:"ГРАВИТАЦИЯ", d:"-0.04", c:700, f:()=>jG-=0.04}]
+        clicker: [
+            {id:'c_pwr', n:"СИЛА ТАПА", b:50, f:()=>pwr++}, 
+            {id:'c_auto', n:"АВТО-БОТ", b:400, f:()=>auto+=5},
+            {id:'c_dbl', n:"ДВОЙНОЙ КЛИК", b:2500, f:()=>{}},
+            {id:'c_kick', n:"БРАТУХА (УДАР)", b:10000, f:()=>{}}
+        ],
+        snake: [
+            {id:'s_mult', n:"ЯБЛОКИ X2", b:150, f:()=>snM++}, 
+            {id:'s_slow', n:"МЕДЛЕННО", b:500, f:()=>snS-=10}
+        ],
+        jumper: [
+            {id:'j_jmp', n:"ПРУЖИНЫ", b:300, f:()=>jJ-=0.5}, 
+            {id:'j_grv', n:"ГРАВИТАЦИЯ", b:700, f:()=>jG-=0.02}
+        ]
     };
 
     function showTab(t) {
@@ -163,7 +177,6 @@
         let titleName = prestigeTitles[Math.min(prestigeCount, prestigeTitles.length - 1)];
         if (prestigeCount >= prestigeTitles.length) titleName += " +" + (prestigeCount - prestigeTitles.length + 1);
         document.getElementById('prestige-name').innerText = titleName;
-
         document.getElementById('mult-display').innerText = "(X" + mult + ")";
 
         const pArea = document.getElementById('p-area');
@@ -173,13 +186,15 @@
 
         localStorage.setItem('dc_v4', coins);
         localStorage.setItem('dc_prestige_level', prestigeCount);
+        localStorage.setItem('dc_lvls_v4', JSON.stringify(lvls));
     }
 
     function doPrestige() {
-        if(confirm("Активировать ПРЕСТИЖ? Твой текущий прогресс сбросится, но фарм увеличится до x" + (mult + 1) + "!")) {
+        if(confirm("Активировать ПРЕСТИЖ? Твой прогресс сбросится, но фарм увеличится до x" + (mult + 1) + "!")) {
             prestigeCount++;
             localStorage.setItem('dc_prestige_level', prestigeCount);
             localStorage.removeItem('dc_v4'); 
+            localStorage.removeItem('dc_lvls_v4'); 
             window.location.reload(); 
         }
     }
@@ -188,42 +203,95 @@
         const list = document.getElementById('shop-list'); list.innerHTML = '';
         let m = upgrades[curGame] ? curGame : 'clicker';
         upgrades[m].forEach((it, i) => {
+            let currentLvl = lvls[it.id];
+            let price = Math.floor(it.b * Math.pow(1.8, currentLvl));
             let d = document.createElement('div'); d.className = 'card';
-            d.innerHTML = `<div style="font-size:7px">${it.n}</div><button class="buy-btn" id="b-${i}" onclick="buy('${m}',${i})">${it.c} DC</button>`;
+            d.innerHTML = `<div style="font-size:7px">${it.n} [LVL:${currentLvl}]</div><button class="buy-btn" id="b-${i}" onclick="buy('${m}',${i}, '${it.id}')">${price} DC</button>`;
             list.appendChild(d);
-            if(coins < it.c) document.getElementById('b-'+i).disabled = true;
+            if(coins < price) document.getElementById('b-'+i).disabled = true;
         });
     }
 
-    function buy(m, i) {
+    function buy(m, i, id) {
         let it = upgrades[m][i];
-        if(coins >= it.c) { beep(600, 0.1); coins -= it.c; it.f(); it.c = Math.floor(it.c*1.8); updateUI(); renderShop(); }
+        let price = Math.floor(it.b * Math.pow(1.8, lvls[id]));
+        if(coins >= price) { 
+            beep(600, 0.1); 
+            coins -= price; 
+            lvls[id]++; 
+            it.f(); 
+            updateUI(); 
+            renderShop(); 
+        }
     }
 
     function doTap(e) {
         beep(400, 0.05); 
-        let gain = pwr * mult;
+        let dbl = Math.random() < (lvls.c_dbl * 0.05) ? 2 : 1; // 5% шанс на уровень сделать х2
+        let gain = pwr * mult * dbl;
         coins += gain; updateUI();
         if(Math.random() < 0.02) spawnArtifact();
-        let p = document.createElement('div'); p.className='pop'; p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; p.innerText='+'+Math.floor(gain); document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
+        
+        let p = document.createElement('div'); p.className='pop'; 
+        p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; 
+        p.innerText = (dbl > 1 ? "x2! " : "") + "+" + Math.floor(gain); 
+        if(dbl > 1) p.style.color = '#c0392b';
+        document.body.appendChild(p); setTimeout(()=>p.remove(), 600);
     }
 
-    function spawnArtifact() {
-        const art = document.getElementById('artifact');
-        art.style.display = 'flex';
-        art.style.left = Math.random() * 70 + 15 + '%';
-        art.style.top = Math.random() * 70 + 15 + '%';
-        setTimeout(() => { art.style.display = 'none'; }, 2000);
-    }
+    // ЛОГИКА "БРАТУХИ" (Удар ногой)
+    function doKick() {
+        let bonus = 2000 * lvls.c_kick * mult;
+        coins += bonus; updateUI();
+        
+        if (curGame === 'clicker') {
+            beep(300, 0.1); setTimeout(()=>beep(150, 0.2), 150);
+            let k = document.createElement('div');
+            k.innerHTML = '🥷';
+            k.style.position = 'absolute';
+            k.style.fontSize = '45px';
+            k.style.left = '-60px';
+            k.style.top = '15%';
+            k.style.transition = 'all 0.3s ease-in';
+            k.style.zIndex = '100';
+            document.getElementById('v-clicker').appendChild(k);
+            
+            setTimeout(() => {
+                k.style.left = '40%';
+                k.style.top = '35%';
+                k.innerHTML = '🥷🦵';
+                
+                // Тряска экрана
+                let view = document.getElementById('v-clicker');
+                view.style.transform = 'translate(8px, 8px)';
+                setTimeout(() => view.style.transform = 'translate(-8px, -8px)', 50);
+                setTimeout(() => view.style.transform = 'translate(0, 0)', 100);
 
-    function catchArtifact(e) {
-        e.stopPropagation();
-        beep(900, 0.2);
-        let bonus = (pwr * 50) * mult;
-        coins += bonus;
-        document.getElementById('artifact').style.display = 'none';
-        alert("АРТЕФАКТ НАЙДЕН: +" + Math.floor(bonus) + " DC!");
-        updateUI();
+                // Надпись BAM!
+                let bam = document.createElement('div');
+                bam.innerText = 'BAM!\n+' + Math.floor(bonus);
+                bam.style.position = 'absolute';
+                bam.style.color = '#ffeb3b'; 
+                bam.style.textShadow = '2px 2px 0 #c0392b, -1px -1px 0 #000';
+                bam.style.fontSize = '18px';
+                bam.style.fontWeight = 'bold';
+                bam.style.textAlign = 'center';
+                bam.style.left = '50%';
+                bam.style.top = '50%';
+                bam.style.transform = 'translate(-50%, -50%)';
+                bam.style.zIndex = '101';
+                document.getElementById('v-clicker').appendChild(bam);
+                
+                setTimeout(() => {
+                    k.style.left = '120%';
+                    k.style.top = '80%';
+                    bam.remove();
+                }, 700);
+                setTimeout(() => k.remove(), 1200);
+            }, 50);
+        } else {
+            beep(250, 0.1); // Тихий звук удара если мы в другой вкладке
+        }
     }
 
     // ЗМЕЙКА
@@ -242,120 +310,84 @@
     // ДЖАМПЕР ПРОКАЧЕННЫЙ С МЕТРАМИ И ФОНАМИ
     const jC = document.getElementById('jumperCanvas'), jX = jC.getContext('2d');
     let jp, jPlats;
-    
-    // Переменные для счетчика и фонов
     let jDist = 0, jMeters = 0, lastMs = 0;
-    // 10 ретро-пастельных цветов, на которых хорошо видно #0f380f
     const bgList = ['#8bac0f', '#9bf6ff', '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#bdb2ff', '#ffc6ff', '#e4f1ee', '#ffc0cb'];
     let jBg = bgList[0];
 
     function getNewPlat(y) {
-        let rnd = Math.random();
-        let type = 0; // 0 = normal, 1 = spring, 2 = fragile
-        if (rnd > 0.85) type = 1;
-        else if (rnd > 0.65) type = 2;
         let w = 40 + Math.random() * 15;
-        let vx = Math.random() > 0.7 ? (Math.random() > 0.5 ? 1.5 : -1.5) : 0;
-        return { x: Math.random() * (200 - w), y: y, w: w, vx: vx, type: type, broken: false };
+        return { x: Math.random() * (200 - w), y: y, w: w };
     }
 
     function initJumper() { 
         jp = {x:90, y:150, vy:0, frame:0}; jPlats = []; 
-        jDist = 0; jMeters = 0; lastMs = 0; jBg = bgList[0]; // Сброс метров и фона
+        jDist = 0; jMeters = 0; lastMs = 0; jBg = bgList[0];
         for(let i=0; i<6; i++) jPlats.push(getNewPlat(i * 45));
         clearInterval(gameLoop); gameLoop = setInterval(drawJumper, 30);
     }
 
     function drawJumper() {
-        // Отрисовка фона текущего биома
         jX.fillStyle = jBg; jX.fillRect(0,0,200,250);
-        
         jp.vy += jG; jp.y += jp.vy; jp.x += jDir * 4; jp.frame++;
         jX.fillStyle = '#0f380f';
         
         jPlats.forEach(p => {
-            if(p.broken) return; 
-            
-            p.x += p.vx; 
-            if(p.x < 0 || p.x > (200 - p.w)) p.vx *= -1; 
-            
-            if (p.type === 1) { 
-                jX.fillRect(p.x, p.y + 4, p.w, 3);
-                jX.fillRect(p.x + 5, p.y, 5, 4);
-                jX.fillRect(p.x + p.w - 10, p.y, 5, 4);
-            } else if (p.type === 2) { 
-                for(let i=0; i<p.w; i+=8) jX.fillRect(p.x + i, p.y, 5, 7);
-            } else { 
-                jX.fillRect(p.x, p.y, p.w, 7);
-            }
-
-            if(jp.vy > 0 && jp.x + 15 > p.x && jp.x < p.x + p.w && jp.y + 15 > p.y && jp.y + 15 < p.y + 10) { 
-                if (p.type === 1) { 
-                    jp.vy = jJ * 1.4; 
-                    coins += 5 * mult; 
-                    beep(700, 0.1); 
-                } else if (p.type === 2) { 
-                    jp.vy = jJ; 
-                    coins += 2 * mult; 
-                    p.broken = true; 
-                    beep(300, 0.05); 
-                } else { 
-                    jp.vy = jJ; 
-                    coins += 2 * mult; 
-                    beep(500, 0.05); 
-                }
-                updateUI(); 
-            }
+            jX.fillRect(p.x, p.y, p.w, 7);
+            if(jp.vy > 0 && jp.x + 15 > p.x && jp.x < p.x + p.w && jp.y + 15 > p.y && jp.y + 15 < p.y + 10) { beep(500, 0.05); jp.vy = jJ; coins += 2 * mult; updateUI(); }
         });
 
-        // Движение экрана вверх и подсчет дистанции
         if(jp.y < 80) { 
-            let d = 80 - jp.y; 
-            jp.y = 80; 
-            jDist += d; // Копим пройденные пиксели
-            
-            jPlats.forEach(p => { 
-                p.y += d; 
-                if(p.y > 250) { Object.assign(p, getNewPlat(0)); }
-            }); 
+            let d = 80 - jp.y; jp.y = 80; jDist += d;
+            jPlats.forEach(p => { p.y += d; if(p.y > 250) { Object.assign(p, getNewPlat(0)); }}); 
         }
 
-        // Проверка достижения новых метров и смена фона
         jMeters = Math.floor(jDist / 10);
         let curMs = Math.floor(jMeters / 200);
-        if(curMs > lastMs) {
-            lastMs = curMs;
-            jBg = bgList[Math.floor(Math.random() * bgList.length)];
-            beep(900, 0.3); // Победный звук смены биома
-        }
+        if(curMs > lastMs) { lastMs = curMs; jBg = bgList[Math.floor(Math.random() * bgList.length)]; beep(900, 0.3); }
 
-        // Отрисовка текста метров
-        jX.fillStyle = '#0f380f';
-        jX.font = "8px 'Press Start 2P'";
-        jX.fillText(jMeters + "M", 5, 15);
+        jX.fillStyle = '#0f380f'; jX.font = "8px 'Press Start 2P'"; jX.fillText(jMeters + "M", 5, 15);
 
-        // Отрисовка игрока (мини-робот)
+        // Робот
         jX.fillStyle = '#0f380f';
-        jX.fillRect(jp.x + 3, jp.y, 9, 5);
-        jX.fillRect(jp.x, jp.y + 5, 15, 8);
-        jX.fillStyle = jBg; // Визор сливается с фоном для стиля
-        jX.fillRect(jp.x + 4, jp.y + 7, 7, 3); 
+        jX.fillRect(jp.x + 3, jp.y, 9, 5); // Голова
+        jX.fillRect(jp.x, jp.y + 5, 15, 8); // Тело
+        jX.fillStyle = jBg; jX.fillRect(jp.x + 4, jp.y + 7, 7, 3); // Визор
         jX.fillStyle = '#0f380f';
         
-        if(jp.vy < 0) {
+        if(jp.vy < 0) { // Турбина
             if(jp.frame % 4 < 2) jX.fillRect(jp.x + 4, jp.y + 13, 7, 5);
             else { jX.fillRect(jp.x + 2, jp.y + 13, 3, 4); jX.fillRect(jp.x + 10, jp.y + 13, 3, 4); }
-        } else {
+        } else { // Ножки
             jX.fillRect(jp.x + 2, jp.y + 13, 3, 3); jX.fillRect(jp.x + 10, jp.y + 13, 3, 3);
         }
 
         if(jp.y > 260) { beep(100, 0.2); initJumper(); }
-        
-        if(jp.x < -15) jp.x = 200; 
-        if(jp.x > 200) jp.x = -15; 
+        if(jp.x < -15) jp.x = 200; if(jp.x > 200) jp.x = -15; 
     }
 
-    setInterval(() => { if(auto > 0) { coins += (auto/10) * mult; updateUI(); }}, 100);
+    // ГЛОБАЛЬНЫЙ ТАЙМЕР (Авто-бот и Братуха)
+    setInterval(() => { 
+        if(auto > 0) { coins += (auto/10) * mult; updateUI(); }
+        
+        if(lvls.c_kick > 0) {
+            kickTimer += 100;
+            if(kickTimer >= 10000) { kickTimer = 0; doKick(); }
+        }
+    }, 100);
+
+    function spawnArtifact() {
+        const art = document.getElementById('artifact'); art.style.display = 'flex';
+        art.style.left = Math.random() * 70 + 15 + '%'; art.style.top = Math.random() * 70 + 15 + '%';
+        setTimeout(() => { art.style.display = 'none'; }, 2000);
+    }
+
+    function catchArtifact(e) {
+        e.stopPropagation(); beep(900, 0.2);
+        let bonus = (pwr * 50) * mult; coins += bonus;
+        document.getElementById('artifact').style.display = 'none';
+        alert("АРТЕФАКТ: +" + Math.floor(bonus) + " DC!"); updateUI();
+    }
+
     updateUI();
 </script>
 </body>
