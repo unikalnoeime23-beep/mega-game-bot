@@ -3,327 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Danila Hub</title>
+    <title>Neon Snake</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f0f0f;
-            color: #ffffff;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        /* Навигация */
-        .nav-bar {
-            display: flex;
-            background: #1a1a1a;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-bottom: 2px solid #333;
-            z-index: 1000;
-        }
-        .nav-btn {
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            padding: 10px;
-        }
-        .nav-btn.active { color: #f39c12; border-bottom: 2px solid #f39c12; }
-        .exit-btn { color: #e74c3c; }
-
-        /* Контент */
-        .page { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; overflow-y: auto; padding-top: 20px; }
+        body { background: #0d1117; color: #fff; font-family: Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
+        .nav { display: flex; width: 100%; background: #161b22; border-bottom: 1px solid #30363d; }
+        .nav button { flex: 1; padding: 15px; background: none; border: none; color: #888; font-weight: bold; cursor: pointer; }
+        .nav button.active { color: #00ff00; border-bottom: 2px solid #00ff00; }
+        
+        .page { display: none; width: 100%; flex-direction: column; align-items: center; padding-top: 20px; }
         .page.active { display: flex; }
 
-        /* Шапка баланса */
-        .global-header { width: 100%; text-align: center; padding: 15px 0; background: #121212; border-bottom: 1px solid #222; }
-        .balance-text { font-size: 32px; font-weight: bold; color: #f1c40f; }
+        #score { font-size: 30px; color: #00ff00; font-weight: bold; }
+        canvas { border: 3px solid #30363d; background: #000; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); }
+        
+        /* Магазин Змейки */
+        .shop-item { width: 90%; background: #161b22; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #30363d; }
+        .buy-btn { background: #238636; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+        .buy-btn:disabled { background: #21262d; color: #484f58; }
 
-        /* КЛИКЕР */
-        #click-button {
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: bold; border: 8px solid #962d22;
-            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4); transition: transform 0.05s;
-            margin-top: 30px;
-        }
-        #click-button:active { transform: scale(0.95); }
-
-        .pop-up { position: absolute; color: #f1c40f; font-size: 24px; font-weight: bold; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 2000; }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
-
-        /* КАРТОЧКИ ИГР */
-        .game-card {
-            width: 85%; background: #1e1e1e; padding: 20px; border-radius: 15px;
-            margin-bottom: 15px; border: 1px solid #333; text-align: left;
-        }
-        .game-card h3 { margin: 0; color: #f39c12; }
-        .game-card p { color: #888; font-size: 14px; margin: 5px 0 10px 0; }
-        .play-btn { width: 100%; background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* ЗМЕЙКА СТИЛИ */
-        #snakeCanvas { border: 3px solid #30363d; background: #000; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); margin-top: 10px; }
-        .snake-controls { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-top: 15px; }
-        .snake-btn { background: #161b22; color: #00ff00; border: 1px solid #333; border-radius: 10px; font-size: 24px; padding: 15px; }
-
-        /* МАГАЗИН */
-        .shop-item {
-            width: 85%; background: #1e1e1e; padding: 15px; border-radius: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; border: 1px solid #333;
-        }
-        .buy-btn { background: #27ae60; border: none; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .buy-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
-
+        .controls { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-top: 20px; }
+        .controls button { background: #161b22; color: #00ff00; border: 2px solid #30363d; border-radius: 15px; font-size: 25px; height: 60px; }
     </style>
 </head>
 <body>
-
-    <div class="global-header">
-        <div class="balance-text"><span id="balance">0</span> DC</div>
-        <div style="color: #bdc3c7; font-size: 14px;">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
+    <div class="nav">
+        <button id="tab-game" class="active" onclick="tab('game')">ЗМЕЙКА</button>
+        <button id="tab-shop" onclick="tab('shop')">МАГАЗИН</button>
+        <button onclick="location.href='index.html'" style="color: #f85149;">ВЫХОД</button>
     </div>
 
-    <div class="nav-bar">
-        <button class="nav-btn active" id="nav-games" onclick="showPage('games-page', this)">🎮 ИГРЫ</button>
-        <button class="nav-btn" id="nav-shop" onclick="showPage('shop-page', this)">🛒 МАГАЗИН</button>
-        <button class="nav-btn exit-btn" onclick="tg.close()">ВЫХОД</button>
-    </div>
-
-    <div id="games-page" class="page active">
-        <div class="game-card">
-            <h3>Danila Clicker</h3>
-            <p>Твой основной источник DanilaCoins.</p>
-            <button class="play-btn" onclick="showPage('clicker-game')">ИГРАТЬ</button>
-        </div>
-        <div class="game-card">
-            <h3>Snake Retro</h3>
-            <p>Ешь яблоки и получай DanilaCoins за каждое!</p>
-            <button class="play-btn" onclick="startSnake()">ИГРАТЬ</button>
-        </div>
-        <div class="game-card" style="opacity: 0.6;">
-            <h3>Square Jumper</h3>
-            <p>Скоро добавим...</p>
-            <button class="play-btn" disabled>В РАЗРАБОТКЕ</button>
+    <div id="page-game" class="page active">
+        <div id="score">0</div>
+        <canvas id="snakeGame" width="300" height="300"></canvas>
+        <div class="controls">
+            <button style="grid-column: 2;" onclick="changeDir('up')">↑</button>
+            <button style="grid-column: 1;" onclick="changeDir('left')">←</button>
+            <button style="grid-column: 2;" onclick="changeDir('down')">↓</button>
+            <button style="grid-column: 3;" onclick="changeDir('right')">→</button>
         </div>
     </div>
 
-    <div id="clicker-game" class="page">
-        <button class="play-btn" style="width: 50%; background: #555; margin-bottom: 20px;" onclick="showPage('games-page')">⬅ НАЗАД</button>
-        <div id="click-button">CLICK</div>
-    </div>
-
-    <div id="snake-game" class="page">
-        <button class="play-btn" style="width: 50%; background: #555; margin-bottom: 10px;" onclick="stopSnake()">⬅ В МЕНЮ</button>
-        <div id="snake-score-display" style="font-size: 24px; color: #00ff00;">Очки: 0</div>
-        <canvas id="snakeCanvas" width="300" height="300"></canvas>
-        <div class="snake-controls">
-            <button class="snake-btn" style="grid-column: 2;" onclick="changeDir('up')">↑</button>
-            <button class="snake-btn" style="grid-column: 1; grid-row: 2;" onclick="changeDir('left')">←</button>
-            <button class="snake-btn" style="grid-column: 2; grid-row: 2;" onclick="changeDir('down')">↓</button>
-            <button class="snake-btn" style="grid-column: 3; grid-row: 2;" onclick="changeDir('right')">→</button>
-        </div>
-    </div>
-
-    <div id="shop-page" class="page">
+    <div id="page-shop" class="page">
+        <h2>Магазин Змейки</h2>
         <div class="shop-item">
-            <div><strong>Сильные пальцы</strong><br><small id="c-upg-desc">+1 к клику. Цена: 100 DC</small></div>
-            <button class="buy-btn" id="buy-click" onclick="buyUpgrade('click', 100)">Купить</button>
+            <div>
+                <strong>Замедление</strong><br>
+                <small>Змейка ползет медленнее. Цена: 50</small>
+            </div>
+            <button class="buy-btn" id="buy-slow" onclick="buySnake('slow', 50)">Купить</button>
         </div>
         <div class="shop-item">
-            <div><strong>AFK-Бот</strong><br><small id="afk-desc">+5/сек. Цена: 500 DC</small></div>
-            <button class="buy-btn" id="buy-afk" onclick="buyUpgrade('afk', 500)">Купить</button>
-        </div>
-        <div class="shop-item">
-            <div><strong>Сервер Данилы</strong><br><small id="server-desc">+500/сек. Цена: 50000 DC</small></div>
-            <button class="buy-btn" id="buy-server" onclick="buyUpgrade('server', 50000)">Купить</button>
+            <div>
+                <strong>Множитель очков</strong><br>
+                <small>x2 за яблоко. Цена: 100</small>
+            </div>
+            <button class="buy-btn" id="buy-x2" onclick="buySnake('x2', 100)">Купить</button>
         </div>
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+        let score = 0;
+        let speed = 120;
+        let multiplier = 1;
+        let coins = parseInt(localStorage.getItem('danila_coins')) || 0;
 
-        let balance = 0;
-        let prestige = 0;
-        let afkLevel = 0;
-        let serverLevel = 0;
-        let clickPower = 1;
-        const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
-
-        // --- ОБЩАЯ НАВИГАЦИЯ ---
-        function showPage(pageId, btn) {
-            if (pageId !== 'snake-game') stopSnake(); // Остановить змейку при уходе
+        function tab(name) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            if(btn && btn.classList.contains('nav-btn')) {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+        }
+
+        function buySnake(type, cost) {
+            if (coins >= cost) {
+                coins -= cost;
+                if (type === 'slow') speed += 10;
+                if (type === 'x2') multiplier += 1;
+                localStorage.setItem('danila_coins', coins);
+                updateShop();
+                alert('Улучшено!');
             }
         }
 
-        // --- ЛОГИКА КЛИКЕРА ---
-        const clickBtn = document.getElementById('click-button');
-        clickBtn.addEventListener('pointerdown', (e) => {
-            let mult = Math.pow(1.2, prestige);
-            let gain = clickPower * mult;
-            balance += gain;
-            showPopUp(e.clientX, e.clientY, gain);
-            updateUI();
-        });
-
-        function showPopUp(x, y, val) {
-            const pop = document.createElement('div');
-            pop.className = 'pop-up';
-            pop.style.left = x + 'px';
-            pop.style.top = y + 'px';
-            pop.innerText = '+' + val.toFixed(1);
-            document.body.appendChild(pop);
-            setTimeout(() => pop.remove(), 1000);
+        function updateShop() {
+            document.getElementById('buy-slow').disabled = coins < 50;
+            document.getElementById('buy-x2').disabled = coins < 100;
         }
 
-        // --- МАГАЗИН ---
-        function buyUpgrade(type, cost) {
-            if (balance >= cost) {
-                balance -= cost;
-                if(type === 'click') clickPower += 1;
-                if(type === 'afk') afkLevel++;
-                if(type === 'server') serverLevel++;
-                updateUI();
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
-            document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
-            document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
-            document.getElementById('buy-click').disabled = balance < 100;
-            document.getElementById('buy-afk').disabled = balance < 500;
-            document.getElementById('buy-server').disabled = balance < 50000;
-        }
-
-        // --- ЗВУКИ (8-БИТ) ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-        function playSnd(type) {
-            if (!audioCtx) audioCtx = new AudioContext();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            if (type === 'eat') {
-                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'die') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-            }
-        }
-
-        // --- ЛОГИКА ЗМЕЙКИ ---
-        const canvas = document.getElementById('snakeCanvas');
-        const ctx = canvas.getContext('2d');
-        const box = 15;
-        let snake, food, d, snakeScore, snakeGameInterval;
-
-        function startSnake() {
-            showPage('snake-game');
-            snake = [{ x: 10 * box, y: 10 * box }];
-            food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
-            d = "right";
-            snakeScore = 0;
-            document.getElementById('snake-score-display').innerText = "Очки: 0";
-            if(snakeGameInterval) clearInterval(snakeGameInterval);
-            snakeGameInterval = setInterval(drawSnake, 120);
-        }
-
-        function stopSnake() {
-            clearInterval(snakeGameInterval);
-            snakeGameInterval = null;
-        }
-
-        function changeDir(dir) {
-            if (dir == "up" && d != "down") d = "up";
-            if (dir == "left" && d != "right") d = "left";
-            if (dir == "down" && d != "up") d = "down";
-            if (dir == "right" && d != "left") d = "right";
-            if (!audioCtx) audioCtx = new AudioContext();
-        }
-
-        function drawSnake() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            for (let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = (i == 0) ? "#00ff00" : "#008000";
-                ctx.fillRect(snake[i].x, snake[i].y, box, box);
-            }
-
-            ctx.fillStyle = "red";
-            ctx.fillRect(food.x, food.y, box, box);
-
-            let sX = snake[0].x;
-            let sY = snake[0].y;
-
-            if (d == "left") sX -= box;
-            if (d == "up") sY -= box;
-            if (d == "right") sX += box;
-            if (d == "down") sY += box;
-
-            if (sX == food.x && sY == food.y) {
-                snakeScore++;
-                // НАГРАДА: 10 коинов * множитель престижа за каждое яблоко!
-                balance += 10 * Math.pow(1.2, prestige);
-                document.getElementById('snake-score-display').innerText = "Очки: " + snakeScore;
-                playSnd('eat');
-                food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
-                updateUI();
-            } else {
-                snake.pop();
-            }
-
-            let head = { x: sX, y: sY };
-
-            if (sX < 0 || sX >= canvas.width || sY < 0 || sY >= canvas.height || collision(head, snake)) {
-                playSnd('die');
-                alert("Игра окончена! Вы заработали коины.");
-                startSnake(); // Рестарт
-                return;
-            }
-            snake.unshift(head);
-        }
-
-        function collision(head, array) {
-            for (let i = 0; i < array.length; i++) {
-                if (head.x == array[i].x && head.y == array[i].y) return true;
-            }
-            return false;
-        }
-
-        // --- AFK ДОХОД ---
-        setInterval(() => {
-            let mult = Math.pow(1.2, prestige);
-            let inc = (afkLevel * 5) + (serverLevel * 500);
-            if (inc > 0) {
-                balance += inc * mult;
-                updateUI();
-            }
-        }, 1000);
-
-        updateUI();
+        // Логика игры (вставь сюда свой код отрисовки змейки, используя переменные speed и multiplier)
+        // При смерти: localStorage.setItem('danila_coins', coins + score);
+        updateShop();
     </script>
 </body>
 </html>
