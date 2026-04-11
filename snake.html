@@ -30,6 +30,45 @@
     </div>
 
     <script>
+        // --- 8-БИТНЫЙ ЗВУК ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'eat') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'die') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // Разблокировка аудио для телефонов при клике на любую часть экрана или кнопку
+        document.body.addEventListener('touchstart', () => {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+                audioCtx.resume();
+            }
+        }, { once: true });
+
+        // --- ЛОГИКА ИГРЫ ---
         const canvas = document.getElementById('snakeGame');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
@@ -37,13 +76,12 @@
         const box = 16;
         let score = 0;
         let snake = [{ x: 9 * box, y: 10 * box }];
-        let food = {
-            x: Math.floor(Math.random() * 19) * box,
-            y: Math.floor(Math.random() * 19) * box
-        };
+        let food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
         let d = "right";
 
         function changeDir(dir) {
+            if (!audioCtx) { audioCtx = new AudioContext(); audioCtx.resume(); } // На всякий случай дублируем разблокировку на кнопках
+
             if (dir == "up" && d != "down") d = "up";
             if (dir == "left" && d != "right") d = "left";
             if (dir == "down" && d != "up") d = "down";
@@ -70,28 +108,29 @@
             if (d == "right") snakeX += box;
             if (d == "down") snakeY += box;
 
+            // Съели еду
             if (snakeX == food.x && snakeY == food.y) {
                 score++;
                 scoreEl.innerText = score;
-                food = {
-                    x: Math.floor(Math.random() * 19) * box,
-                    y: Math.floor(Math.random() * 19) * box
-                };
+                playSound('eat'); // ЗВУК ПОЕДАНИЯ
+                food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
             } else {
                 snake.pop();
             }
 
             let newHead = { x: snakeX, y: snakeY };
 
-            // СТОЛКНОВЕНИЕ (КОНЕЦ ИГРЫ)
+            // Столкновение
             if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
                 clearInterval(game);
+                playSound('die'); // ЗВУК СМЕРТИ
 
-                // ОТПРАВКА ДАННЫХ В БОТА
                 if (window.Telegram && window.Telegram.WebApp && score > 0) {
-                    window.Telegram.WebApp.sendData(score.toString());
+                    // Даем звуку проиграться 400мс, потом закрываем и отправляем очки
+                    setTimeout(() => {
+                        window.Telegram.WebApp.sendData(score.toString());
+                    }, 400);
                 } else {
-                    // Если играем просто в браузере
                     setTimeout(() => { location.reload(); }, 1000);
                 }
                 return;
