@@ -3,89 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GAME HUB</title>
+    <title>Danila-Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        
-        .header { margin-top: 40px; text-align: center; }
-        /* АНИМАЦИЯ ЗАГОЛОВКА */
-        .header h1 { 
-            font-size: 36px; margin: 0; 
-            background: linear-gradient(90deg, #00d2ff, #ff00cc, #00d2ff); 
-            background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            font-weight: 900; animation: shine 3s linear infinite;
-        }
-        @keyframes shine { to { background-position: 200% center; } }
-
-        .balance { font-size: 24px; margin: 10px 0; color: #ffcc00; font-weight: bold; }
-        .game-list { width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
-        
-        /* АНИМАЦИЯ ПОЯВЛЕНИЯ КАРТОЧЕК */
-        .game-card { 
-            background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 18px; 
-            display: flex; justify-content: space-between; align-items: center;
-            opacity: 0; transform: translateY(20px); animation: slideUp 0.6s forwards ease-out;
-        }
-        .game-card:nth-child(1) { animation-delay: 0.1s; }
-        .game-card:nth-child(2) { animation-delay: 0.2s; }
-        .game-card:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
-
-        .game-info { display: flex; align-items: center; gap: 15px; }
-        .game-titles { display: flex; flex-direction: column; }
-        .game-name { font-weight: 800; font-size: 20px; }
-        .game-subtitle { font-size: 12px; color: #8b949e; }
-        
-        /* ПУЛЬСАЦИЯ КНОПОК PLAY */
-        .play-button { 
-            background: #00a2ff; color: #000; border: none; border-radius: 12px; 
-            padding: 12px 24px; font-weight: 900; cursor: pointer; 
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 10px rgba(0, 162, 255, 0.2); }
-            50% { box-shadow: 0 0 20px rgba(0, 162, 255, 0.6); transform: scale(1.05); }
-            100% { box-shadow: 0 0 10px rgba(0, 162, 255, 0.2); }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
         }
 
-        .market-button { background: #ffaa00; color: #000; border: none; border-radius: 15px; width: 90%; max-width: 400px; padding: 20px; font-weight: 900; margin-top: 30px; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 15px rgba(255,170,0,0.3); margin-bottom: 30px; }
+        .header { position: absolute; top: 20px; text-align: center; }
+        .balance-text { font-size: 32px; font-weight: bold; color: #f39c12; margin-bottom: 5px; }
+        .prestige-info { font-size: 18px; color: #bdc3c7; }
+
+        /* Круглая кнопка кликера */
+        #click-button {
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4);
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            border: 8px solid #962d22;
+        }
+
+        #click-button:active { transform: scale(0.95); }
+
+        /* Всплывающие цифры */
+        .pop-up {
+            position: absolute;
+            color: #f1c40f;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-120px); opacity: 0; }
+        }
+
+        .shop-container { margin-top: 40px; width: 80%; }
+        .shop-item {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+        }
+
+        button {
+            background: #27ae60;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        button:disabled { background: #555; color: #888; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <h1>GAME HUB</h1>
-        <div class="balance">💰 <span id="val">...</span></div>
+        <div class="balance-text"><span id="balance">0</span> DC</div>
+        <div class="prestige-info">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
     </div>
-    <div class="game-list">
-        <div class="game-card">
-            <div class="game-info"><span>🐍</span><div class="game-titles"><span class="game-name">SNAKE</span><span class="game-subtitle">Classic Neon</span></div></div>
-            <button class="play-button" onclick="location.href='snake.html'">PLAY</button>
-        </div>
-        <div class="game-card">
-            <div class="game-info"><span>🧱</span><div class="game-titles"><span class="game-name">TETRIS</span><span class="game-subtitle">Logic Block</span></div></div>
-            <button class="play-button" onclick="location.href='tetris.html'">PLAY</button>
-        </div>
-        <div class="game-card">
-            <div class="game-info"><span>🚀</span><div class="game-titles"><span class="game-name">JUMP</span><span class="game-subtitle">Square Dash</span></div></div>
-            <button class="play-button" onclick="location.href='jumper.html'">PLAY</button>
+
+    <div id="click-button">CLICK</div>
+
+    <div class="shop-container">
+        <div class="shop-item">
+            <div>
+                <strong>AFK-Бот</strong><br>
+                <small id="afk-desc">Нужно 500 DC</small>
+            </div>
+            <button id="buy-afk" onclick="buyAfk()" disabled>Купить</button>
         </div>
     </div>
-    <button class="market-button" onclick="closeAndMarket()">Market & Custom</button>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        document.getElementById('val').innerText = params.get('balance') || '0';
+        let tg = window.Telegram.WebApp;
+        let balance = 0;
+        let prestige = 0;
+        let afkLevel = 0;
+        let clickPower = 1;
+        const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
 
-        function closeAndMarket() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.close();
+        const btn = document.getElementById('click-button');
+        
+        btn.addEventListener('pointerdown', (e) => {
+            let multiplier = Math.pow(1.2, prestige);
+            let currentGain = clickPower * multiplier;
+            balance += currentGain;
+            
+            showPopUp(e.clientX, e.clientY, currentGain);
+            updateUI();
+            checkPrestige();
+        });
+
+        function showPopUp(x, y, val) {
+            const pop = document.createElement('div');
+            pop.className = 'pop-up';
+            pop.style.left = (x - 20) + 'px';
+            pop.style.top = (y - 20) + 'px';
+            pop.innerText = '+' + val.toFixed(1);
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 1000);
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
+            document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
+            document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
+            
+            // Логика доступности магазина
+            const afkBtn = document.getElementById('buy-afk');
+            if (balance >= 500) {
+                afkBtn.disabled = false;
+                document.getElementById('afk-desc').innerText = "Доступно! Цена: 500";
             }
         }
-        
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.expand();
+
+        function buyAfk() {
+            if (balance >= 500) {
+                balance -= 500;
+                afkLevel++;
+                updateUI();
+            }
         }
+
+        function checkPrestige() {
+            if (balance >= 1000000000 && prestige < 10) {
+                prestige++;
+                balance = 0;
+                afkLevel = 0;
+                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН! Прогресс сброшен, доход x1.2");
+                updateUI();
+            }
+        }
+
+        // AFK Цикл (раз в секунду)
+        setInterval(() => {
+            if (afkLevel > 0) {
+                let multiplier = Math.pow(1.2, prestige);
+                balance += (afkLevel * 5) * multiplier;
+                updateUI();
+            }
+        }, 1000);
+
+        tg.expand();
     </script>
 </body>
 </html>
