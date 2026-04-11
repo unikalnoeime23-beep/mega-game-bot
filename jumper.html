@@ -3,132 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jumper Game</title>
+    <title>Neon Jumper</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; touch-action: none; font-family: Arial, sans-serif; }
-        canvas { display: block; background: #fff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.3); }
-        #score-ui { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 30px; font-weight: bold; color: white; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+        body { margin: 0; overflow: hidden; background: #0a0a0c; touch-action: none; font-family: 'Segoe UI', sans-serif; color: white; }
+        
+        .nav { display: flex; width: 100%; background: #161b22; border-bottom: 1px solid #30363d; position: fixed; top: 0; z-index: 10; }
+        .nav button { flex: 1; padding: 15px; background: none; border: none; color: #888; font-weight: bold; cursor: pointer; }
+        .nav button.active { color: #3498db; border-bottom: 2px solid #3498db; }
+
+        .page { display: none; width: 100%; flex-direction: column; align-items: center; height: 100vh; justify-content: center; }
+        .page.active { display: flex; }
+
+        canvas { display: block; background: #000; box-shadow: 0 0 30px rgba(52, 152, 219, 0.2); }
+        
+        #ui { position: absolute; top: 70px; width: 100%; text-align: center; pointer-events: none; }
+        #score { font-size: 40px; font-weight: bold; color: #3498db; }
+        #coins-display { color: #f1c40f; font-size: 18px; }
+
+        /* Магазин */
+        .shop-container { width: 90%; max-width: 350px; margin-top: 60px; }
+        .shop-item { background: #1a1a1d; padding: 15px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        .shop-item.owned { border-color: #27ae60; opacity: 0.8; }
+        .info { flex: 1; }
+        .info strong { color: #3498db; display: block; margin-bottom: 4px; }
+        .info small { color: #bbb; font-size: 12px; }
+        .buy-btn { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
+        .buy-btn:disabled { background: #333; color: #666; }
     </style>
 </head>
 <body>
-    <div id="score-ui">SCORE: <span id="score">0</span></div>
-    <canvas id="c"></canvas>
+    <div class="nav">
+        <button id="tab-game" class="active" onclick="tab('game')">ИГРА</button>
+        <button id="tab-shop" onclick="tab('shop')">МАГАЗИН</button>
+        <button onclick="location.href='index.html'" style="color: #e74c3c;">ВЫХОД</button>
+    </div>
+
+    <div id="page-game" class="page active">
+        <div id="ui">
+            <div id="score">0</div>
+            <div id="coins-display">💰 <span id="coins-count">0</span></div>
+        </div>
+        <canvas id="c"></canvas>
+    </div>
+
+    <div id="page-shop" class="page">
+        <div class="shop-container">
+            <h2 style="text-align: center;">Улучшения</h2>
+            
+            <div class="shop-item" id="item-magnet">
+                <div class="info">
+                    <strong>Магнитные ботинки</strong>
+                    <small>Платформы сами тянутся к тебе</small>
+                </div>
+                <button class="buy-btn" onclick="buy('magnet', 200)">200 DC</button>
+            </div>
+
+            <div class="shop-item" id="item-trail">
+                <div class="info">
+                    <strong>Грави-хвост</strong>
+                    <small>Неоновый след замедляет падение</small>
+                </div>
+                <button class="buy-btn" onclick="buy('trail', 500)">500 DC</button>
+            </div>
+
+            <div class="shop-item" id="item-jetpack">
+                <div class="info">
+                    <strong>Реактивный прыжок</strong>
+                    <small>Нажми в полете для рывка вверх</small>
+                </div>
+                <button class="buy-btn" onclick="buy('jetpack', 1000)">1000 DC</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // --- 8-БИТНЫЙ ЗВУК ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            if (type === 'jump') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'die') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.4);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-            }
-        }
-
-        // --- ЛОГИКА ИГРЫ ---
+        const tg = window.Telegram.WebApp;
         const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth > 400 ? 400 : window.innerWidth; 
+        canvas.width = Math.min(window.innerWidth, 400);
         canvas.height = window.innerHeight;
-        
+
+        // Данные и улучшения
+        let coins = parseInt(localStorage.getItem('danila_coins')) || 0;
+        let upgrades = JSON.parse(localStorage.getItem('jumper_upgrades')) || { magnet: false, trail: false, jetpack: false };
         let score = 0, platforms = [], gameActive = true;
-        const player = { w: 20, h: 20, vy: 0, g: 0.5, jump: -12 };
+        let trailParticles = [];
+        let jetpackReady = true;
 
-        function init() {
-            platforms = [];
-            score = 0;
-            document.getElementById('score').innerText = score;
-            
-            player.x = canvas.width / 2 - player.w / 2;
-            player.y = canvas.height - 150;
-            player.vy = 0;
+        const player = { x: 0, y: 0, w: 25, h: 25, vy: 0, g: 0.45, jump: -12 };
 
-            platforms.push({ x: canvas.width / 2 - 30, y: canvas.height - 50, w: 60, h: 10 });
-            for (let i = 1; i < 7; i++) {
-                platforms.push({ x: Math.random()*(canvas.width-60), y: canvas.height - i*(canvas.height/7) - 50, w: 60, h: 10 });
+        function tab(name) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('page-' + name).classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+            if(name === 'game') init();
+        }
+
+        function buy(id, cost) {
+            if (coins >= cost && !upgrades[id]) {
+                coins -= cost;
+                upgrades[id] = true;
+                localStorage.setItem('danila_coins', coins);
+                localStorage.setItem('jumper_upgrades', JSON.stringify(upgrades));
+                updateShopUI();
             }
         }
 
-        // Управление и разблокировка звука
+        function updateShopUI() {
+            document.getElementById('coins-count').innerText = coins;
+            for (let key in upgrades) {
+                if (upgrades[key]) {
+                    const btn = document.querySelector(`#item-${key} .buy-btn`);
+                    btn.innerText = "КУПЛЕНО";
+                    btn.disabled = true;
+                    document.getElementById(`item-${key}`).classList.add('owned');
+                }
+            }
+        }
+
+        function init() {
+            platforms = []; score = 0; gameActive = true;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 150;
+            player.vy = 0;
+            for (let i = 0; i < 7; i++) {
+                platforms.push({ x: Math.random() * (canvas.width - 70), y: canvas.height - i * 120, w: 70, h: 12 });
+            }
+            updateShopUI();
+        }
+
         window.addEventListener('touchstart', (e) => {
-            // Разблокировка аудио для телефонов
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
-                audioCtx.resume();
+            if (!gameActive || document.getElementById('page-shop').classList.contains('active')) return;
+            
+            // Механика Jetpack
+            if (upgrades.jetpack && jetpackReady && player.vy > 0) {
+                player.vy = -15;
+                jetpackReady = false;
+                setTimeout(() => jetpackReady = true, 5000);
+                return;
             }
 
-            if (!gameActive) return;
             const tx = e.touches[0].clientX;
-            if (tx < window.innerWidth / 2) player.x -= 45; else player.x += 45;
+            player.x += (tx < window.innerWidth / 2) ? -50 : 50;
         });
 
         function draw() {
-            if (!gameActive) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            player.vy += player.g; 
+            if (!gameActive) { requestAnimationFrame(draw); return; }
+            ctx.fillStyle = '#0a0a0c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Трейл (след)
+            if (upgrades.trail) {
+                trailParticles.push({x: player.x + 12, y: player.y + 12, r: 10, a: 1});
+                trailParticles.forEach((p, i) => {
+                    p.a -= 0.05;
+                    ctx.fillStyle = `rgba(52, 152, 219, ${p.a})`;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+                    if(p.a <= 0) trailParticles.splice(i, 1);
+                });
+                if (player.vy > 0) player.vy -= 0.05; // Эффект замедления падения
+            }
+
+            player.vy += player.g;
             player.y += player.vy;
 
-            // Коллизия (прыжок)
-            if (player.vy > 0) {
-                platforms.forEach(p => {
-                    if (player.x + player.w > p.x && player.x < p.x + p.w && player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.vy) {
-                        player.vy = player.jump; 
-                        score++;
-                        document.getElementById('score').innerText = score;
-                        playSound('jump'); // ЗВУК ПРЫЖКА
-                    }
-                });
-            }
+            platforms.forEach(p => {
+                // Механика магнита
+                if (upgrades.magnet) {
+                    let dx = (player.x + 12) - (p.x + p.w/2);
+                    let dy = (player.y + 12) - (p.y);
+                    if (Math.abs(dx) < 100 && Math.abs(dy) < 100) p.x += dx * 0.05;
+                }
 
+                if (player.vy > 0 && player.x + player.w > p.x && player.x < p.x + p.w && 
+                    player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.vy) {
+                    player.vy = player.jump;
+                    score++;
+                    document.getElementById('score').innerText = score;
+                }
+
+                ctx.fillStyle = '#3498db';
+                ctx.shadowBlur = 10; ctx.shadowColor = '#3498db';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.shadowBlur = 0;
+            });
+
+            // Камера
             if (player.y < canvas.height / 2) {
-                let d = canvas.height / 2 - player.y; 
+                let d = canvas.height / 2 - player.y;
                 player.y = canvas.height / 2;
-                platforms.forEach(p => { 
-                    p.y += d; 
-                    if (p.y > canvas.height) { 
-                        p.y = 0; 
-                        p.x = Math.random()*(canvas.width-60); 
-                    } 
+                platforms.forEach(p => {
+                    p.y += d;
+                    if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * (canvas.width - 70); }
                 });
             }
 
-            ctx.fillStyle = 'green'; 
-            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
-            ctx.fillStyle = 'red'; 
+            // Игрок
+            ctx.fillStyle = jetpackReady && upgrades.jetpack ? '#f1c40f' : '#e74c3c';
             ctx.fillRect(player.x, player.y, player.w, player.h);
 
-            // ИГРОК УПАЛ (СМЕРТЬ)
-            if (player.y > canvas.height) { 
-                gameActive = false; 
-                playSound('die'); // ЗВУК СМЕРТИ
-
-                if (window.Telegram && window.Telegram.WebApp && score > 0) {
-                    window.Telegram.WebApp.sendData(score.toString());
-                } else {
-                    setTimeout(() => { gameActive = true; init(); }, 1000); 
-                }
+            if (player.y > canvas.height) {
+                gameActive = false;
+                coins += Math.floor(score / 2);
+                localStorage.setItem('danila_coins', coins);
+                setTimeout(init, 1000);
             }
             
             if (player.x + player.w < 0) player.x = canvas.width;
@@ -136,8 +216,8 @@
 
             requestAnimationFrame(draw);
         }
-        
-        init(); 
+
+        init();
         draw();
     </script>
 </body>
