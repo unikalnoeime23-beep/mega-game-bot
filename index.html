@@ -25,6 +25,7 @@
             justify-content: space-around;
             padding: 10px 0;
             border-bottom: 2px solid #333;
+            z-index: 1000;
         }
         .nav-btn {
             background: none;
@@ -33,80 +34,117 @@
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
+            padding: 10px;
         }
         .nav-btn.active { color: #f39c12; border-bottom: 2px solid #f39c12; }
         .exit-btn { color: #e74c3c; }
 
         /* Контент */
-        .page { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; position: relative; }
+        .page { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; overflow-y: auto; padding-top: 20px; }
         .page.active { display: flex; }
 
-        /* Кликер (Твой стиль) */
-        .header { position: absolute; top: 20px; text-align: center; }
-        .balance-text { font-size: 32px; font-weight: bold; color: #f39c12; margin-bottom: 5px; }
+        /* Шапка баланса */
+        .global-header { width: 100%; text-align: center; padding: 15px 0; background: #121212; border-bottom: 1px solid #222; }
+        .balance-text { font-size: 32px; font-weight: bold; color: #f1c40f; }
+
+        /* КЛИКЕР */
         #click-button {
-            width: 200px; height: 200px;
+            width: 220px; height: 220px;
             background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; font-weight: bold; border: 8px solid #962d22;
-            box-shadow: 0 0 30px rgba(231, 76, 60, 0.4); transition: transform 0.05s;
+            font-size: 28px; font-weight: bold; border: 8px solid #962d22;
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4); transition: transform 0.05s;
+            margin-top: 50px;
         }
         #click-button:active { transform: scale(0.95); }
 
-        /* Список игр */
-        .game-list { width: 80%; }
-        .game-card {
-            background: #1e1e1e; padding: 20px; border-radius: 15px; margin-bottom: 15px;
-            text-align: center; border: 1px solid #333; cursor: pointer;
-        }
-        .game-card:hover { border-color: #f39c12; }
-
-        /* Всплывашки */
         .pop-up { position: absolute; color: #f1c40f; font-size: 24px; font-weight: bold; pointer-events: none; animation: floatUp 1s ease-out forwards; }
         @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
 
-        button.buy-btn { background: #27ae60; border: none; color: white; padding: 8px 15px; border-radius: 6px; font-weight: bold; margin-top: 10px; }
-        button:disabled { background: #555; color: #888; }
+        /* КАРТОЧКИ ИГР */
+        .game-card {
+            width: 85%; background: #1e1e1e; padding: 20px; border-radius: 15px;
+            margin-bottom: 15px; border: 1px solid #333; text-align: left;
+        }
+        .game-card h3 { margin: 0; color: #f39c12; }
+        .game-card p { color: #888; font-size: 14px; margin: 5px 0 10px 0; }
+        .play-btn { width: 100%; background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* МАГАЗИН */
+        .shop-item {
+            width: 85%; background: #1e1e1e; padding: 15px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; border: 1px solid #333;
+        }
+        .buy-btn { background: #27ae60; border: none; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .buy-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+
     </style>
 </head>
 <body>
 
+    <div class="global-header">
+        <div class="balance-text"><span id="balance">0</span> DC</div>
+        <div style="color: #bdc3c7; font-size: 14px;">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
+    </div>
+
     <div class="nav-bar">
-        <button class="nav-btn active" onclick="showPage('list-page', this)">🎮 ИГРЫ</button>
-        <button class="nav-btn" onclick="showPage('clicker-page', this)">💰 КЛИКЕР</button>
+        <button class="nav-btn active" onclick="showPage('games-page', this)">🎮 ИГРЫ</button>
+        <button class="nav-btn" onclick="showPage('shop-page', this)">🛒 МАГАЗИН</button>
         <button class="nav-btn exit-btn" onclick="tg.close()">ВЫХОД</button>
     </div>
 
-    <div id="list-page" class="page active">
-        <h2>Выбери игру, Данил</h2>
-        <div class="game-list">
-            <div class="game-card" onclick="showPage('clicker-page')">
-                <h3>Danila Coin Clicker</h3>
-                <p>Жми и богатей!</p>
-            </div>
-            <div class="game-card" onclick="alert('Запуск Square Jumper...')">
-                <h3>Square Jumper</h3>
-                <p>Тот самый квадратный прыгун</p>
-            </div>
+    <div id="games-page" class="page active">
+        <div class="game-card">
+            <h3>Danila Clicker</h3>
+            <p>Твой основной источник DanilaCoins.</p>
+            <button class="play-btn" onclick="showPage('clicker-game')">ИГРАТЬ</button>
+        </div>
+        <div class="game-card">
+            <h3>Square Jumper</h3>
+            <p>Прыгай по платформам и бей рекорды.</p>
+            <button class="play-btn" onclick="alert('Запуск Square Jumper...')">ИГРАТЬ</button>
+        </div>
+        <div class="game-card">
+            <h3>Snake Retro</h3>
+            <p>Классическая змейка в неоновом стиле.</p>
+            <button class="play-btn" onclick="alert('Запуск Змейки...')">ИГРАТЬ</button>
         </div>
     </div>
 
-    <div id="clicker-page" class="page">
-        <div class="header">
-            <div class="balance-text"><span id="balance">0</span> DC</div>
-            <div class="prestige-info" style="color:#bdc3c7">Престиж: <span id="emblem">🆕</span> (x<span id="mult">1.0</span>)</div>
-        </div>
-
+    <div id="clicker-game" class="page">
+        <button class="play-btn" style="width: 50%; background: #555; margin-bottom: 20px;" onclick="showPage('games-page')">⬅ НАЗАД В МЕНЮ</button>
         <div id="click-button">CLICK</div>
+    </div>
 
-        <div style="margin-top: 30px; width: 80%;">
-            <div style="background: #1e1e1e; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
-                <div>
-                    <strong>AFK-Бот</strong><br>
-                    <small id="afk-desc" style="color:#888">Нужно 500 DC</small>
-                </div>
-                <button class="buy-btn" id="buy-afk" onclick="buyAfk()" disabled>Купить</button>
+    <div id="shop-page" class="page">
+        <div class="shop-item">
+            <div>
+                <strong>Сильные пальцы</strong><br>
+                <small id="c-upg-desc">+1 к клику. Цена: 100 DC</small>
             </div>
+            <button class="buy-btn" id="buy-click" onclick="buyUpgrade('click', 100)">Купить</button>
+        </div>
+        <div class="shop-item">
+            <div>
+                <strong>AFK-Бот</strong><br>
+                <small id="afk-desc">+5/сек. Цена: 500 DC</small>
+            </div>
+            <button class="buy-btn" id="buy-afk" onclick="buyUpgrade('afk', 500)">Купить</button>
+        </div>
+        <div class="shop-item">
+            <div>
+                <strong>Ферма Данилы</strong><br>
+                <small id="farm-desc">+50/сек. Цена: 5000 DC</small>
+            </div>
+            <button class="buy-btn" id="buy-farm" onclick="buyUpgrade('farm', 5000)">Купить</button>
+        </div>
+        <div class="shop-item">
+            <div>
+                <strong>Серверный узел</strong><br>
+                <small id="server-desc">+500/сек. Цена: 50000 DC</small>
+            </div>
+            <button class="buy-btn" id="buy-server" onclick="buyUpgrade('server', 50000)">Купить</button>
         </div>
     </div>
 
@@ -117,21 +155,20 @@
         let balance = 0;
         let prestige = 0;
         let afkLevel = 0;
+        let farmLevel = 0;
+        let serverLevel = 0;
         let clickPower = 1;
         const emblems = ["🆕", "🥉", "🥈", "🥇", "💎", "🔥", "👑", "🌌", "🚀", "🔱", "⚛️"];
 
-        // Навигация
         function showPage(pageId, btn) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            
             if(btn) {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             }
         }
 
-        // Логика кликера (Твой код)
         const clickBtn = document.getElementById('click-button');
         clickBtn.addEventListener('pointerdown', (e) => {
             let multiplier = Math.pow(1.2, prestige);
@@ -145,11 +182,22 @@
         function showPopUp(x, y, val) {
             const pop = document.createElement('div');
             pop.className = 'pop-up';
-            pop.style.left = (x - 20) + 'px';
-            pop.style.top = (y - 20) + 'px';
+            pop.style.left = x + 'px';
+            pop.style.top = y + 'px';
             pop.innerText = '+' + val.toFixed(1);
             document.body.appendChild(pop);
             setTimeout(() => pop.remove(), 1000);
+        }
+
+        function buyUpgrade(type, cost) {
+            if (balance >= cost) {
+                balance -= cost;
+                if(type === 'click') clickPower += 1;
+                if(type === 'afk') afkLevel++;
+                if(type === 'farm') farmLevel++;
+                if(type === 'server') serverLevel++;
+                updateUI();
+            }
         }
 
         function updateUI() {
@@ -157,40 +205,27 @@
             document.getElementById('emblem').innerText = emblems[prestige] || "⚛️";
             document.getElementById('mult').innerText = Math.pow(1.2, prestige).toFixed(1);
             
-            const afkBtn = document.getElementById('buy-afk');
-            if (balance >= 500) {
-                afkBtn.disabled = false;
-                document.getElementById('afk-desc').innerText = "Доступно! Цена: 500";
-                document.getElementById('afk-desc').style.color = "#27ae60";
-            } else {
-                afkBtn.disabled = true;
-                document.getElementById('afk-desc').innerText = `Нужно 500 DC`;
-                document.getElementById('afk-desc').style.color = "#888";
-            }
-        }
-
-        function buyAfk() {
-            if (balance >= 500) {
-                balance -= 500;
-                afkLevel++;
-                updateUI();
-            }
+            document.getElementById('buy-click').disabled = balance < 100;
+            document.getElementById('buy-afk').disabled = balance < 500;
+            document.getElementById('buy-farm').disabled = balance < 5000;
+            document.getElementById('buy-server').disabled = balance < 50000;
         }
 
         function checkPrestige() {
             if (balance >= 1000000000 && prestige < 10) {
                 prestige++;
                 balance = 0;
-                afkLevel = 0;
-                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН!");
+                afkLevel = 0; farmLevel = 0; serverLevel = 0; clickPower = 1;
+                alert("УРОВЕНЬ ПРЕСТИЖА ПОВЫШЕН! Твой доход вырос.");
                 updateUI();
             }
         }
 
         setInterval(() => {
-            if (afkLevel > 0) {
-                let multiplier = Math.pow(1.2, prestige);
-                balance += (afkLevel * 5) * multiplier;
+            let multiplier = Math.pow(1.2, prestige);
+            let income = (afkLevel * 5) + (farmLevel * 50) + (serverLevel * 500);
+            if (income > 0) {
+                balance += income * multiplier;
                 updateUI();
             }
         }, 1000);
