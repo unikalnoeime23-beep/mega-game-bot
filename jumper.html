@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jumper Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #87CEEB; touch-action: none; font-family: Arial, sans-serif; }
         canvas { display: block; background: #fff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.3); }
@@ -12,6 +14,7 @@
 <body>
     <div id="score-ui">SCORE: <span id="score">0</span></div>
     <canvas id="c"></canvas>
+
     <script>
         const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
@@ -26,21 +29,18 @@
             score = 0;
             document.getElementById('score').innerText = score;
             
-            // Центрируем игрока
             player.x = canvas.width / 2 - player.w / 2;
             player.y = canvas.height - 150;
             player.vy = 0;
 
-            // ГАРАНТИРОВАННАЯ СТАРТОВАЯ ПЛАТФОРМА
+            // Стартовая платформа
             platforms.push({ x: canvas.width / 2 - 30, y: canvas.height - 50, w: 60, h: 10 });
 
-            // Остальные платформы
             for (let i = 1; i < 7; i++) {
                 platforms.push({ x: Math.random()*(canvas.width-60), y: canvas.height - i*(canvas.height/7) - 50, w: 60, h: 10 });
             }
         }
 
-        // МГНОВЕННОЕ УПРАВЛЕНИЕ
         window.addEventListener('touchstart', (e) => {
             if (!gameActive) return;
             const tx = e.touches[0].clientX;
@@ -54,7 +54,6 @@
             player.vy += player.g; 
             player.y += player.vy;
 
-            // Коллизия (прыжок)
             if (player.vy > 0) {
                 platforms.forEach(p => {
                     if (player.x + player.w > p.x && player.x < p.x + p.w && player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.vy) {
@@ -65,7 +64,6 @@
                 });
             }
 
-            // Движение камеры вверх
             if (player.y < canvas.height / 2) {
                 let d = canvas.height / 2 - player.y; 
                 player.y = canvas.height / 2;
@@ -78,20 +76,25 @@
                 });
             }
 
-            // Отрисовка
             ctx.fillStyle = 'green'; 
             platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
             
             ctx.fillStyle = 'red'; 
             ctx.fillRect(player.x, player.y, player.w, player.h);
 
-            // Смерть и рестарт
+            // ИГРОК УПАЛ (КОНЕЦ ИГРЫ)
             if (player.y > canvas.height) { 
                 gameActive = false; 
-                setTimeout(() => { gameActive = true; init(); }, 800); 
+
+                // ОТПРАВКА ДАННЫХ В БОТА
+                if (window.Telegram && window.Telegram.WebApp && score > 0) {
+                    window.Telegram.WebApp.sendData(score.toString());
+                } else {
+                    // Если играем просто в браузере
+                    setTimeout(() => { gameActive = true; init(); }, 800); 
+                }
             }
             
-            // Телепортация по краям экрана
             if (player.x + player.w < 0) player.x = canvas.width;
             if (player.x > canvas.width) player.x = -player.w;
 
